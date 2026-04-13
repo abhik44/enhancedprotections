@@ -1,6 +1,6 @@
 //
 import { HiKey, HiOutlineUser } from "react-icons/hi";
-import styles from "./Login.module.css";
+import styles from "./LoginPage.module.css";
 import Spinner from "../ui/Spinner";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,7 @@ const ALLOWED_EMAIL = "admin@enhancedprotections.com";
 
 function Login() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -38,12 +38,10 @@ function Login() {
       toast.success("Logged in");
       navigate("/app");
     } catch (err) {
-     
       console.error("Firebase auth error:", err);
       const code = err?.code || "unknown";
       const message = err?.message || String(err);
 
-   
       if (code === "auth/user-not-found") {
         toast.error("No user found with that email");
       } else if (code === "auth/wrong-password") {
@@ -51,10 +49,8 @@ function Login() {
       } else if (code === "auth/invalid-email") {
         toast.error("Invalid email address");
       } else if (code === "auth/invalid-credential") {
-      
         toast.error("Invalid credential. Check sign-in method and credentials.");
       } else {
-       
         toast.error(message);
       }
 
@@ -82,32 +78,22 @@ function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="emailInput" className="form-label fw-medium mb-2">Email</label>
+            <label htmlFor="emailInput" className="form-label fw-medium mb-2">
+              Email
+            </label>
             <div className={`d-flex border align-items-center ${styles.inputBox} px-2 rounded-2`}>
               <HiOutlineUser />
-              <input
-                id="emailInput"
-                type="email"
-                className="form-control border-0"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <input id="emailInput" type="email" className="form-control border-0" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
           </div>
 
           <div className="mb-3">
-            <label htmlFor="passwordInput" className="form-label fw-medium mb-2">Password</label>
+            <label htmlFor="passwordInput" className="form-label fw-medium mb-2">
+              Password
+            </label>
             <div className={`d-flex border align-items-center ${styles.inputBox} px-2 rounded-2`}>
               <HiKey />
-              <input
-                id="passwordInput"
-                type="password"
-                className="form-control border-0"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <input id="passwordInput" type="password" className="form-control border-0" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
           </div>
 
