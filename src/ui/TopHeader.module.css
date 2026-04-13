@@ -1,0 +1,29 @@
+.topHeader{
+    background-color: #fff;
+    border-bottom: 2px solid #f3f4f6;
+    padding: 0.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    color: #4a4a4a ;
+    align-items: center;
+}
+.user{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    
+}
+
+.logout{
+    border: none;
+    background-color: #ce0e31;
+    color:#fff !important ;
+    padding: 6px 24px;
+    border-radius: 50px;
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+
+}

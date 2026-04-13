@@ -1,0 +1,14 @@
+.search{
+    background-color: #f6f6f6;
+}
+.search input{
+    background-color: transparent !important;
+}
+.search input:focus{
+    outline: none;
+    box-shadow: none;
+}
+.searchIcon{
+    width: 20px;
+    height: 20px;
+}

@@ -1,0 +1,34 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+
+}
+
+/* setting up the background color according to project */
+.custom-red-bg{
+background-color:#ce0e31 !important ;
+}
+
+/* setting up text color if in case needed */
+.text-custom-red{
+color: #ce0e31 !important;
+}
+
+
+.text-4a{
+color: #4a4a4a;
+}
+
+
+/* Ensure Google widget's dropdown sits on top of the modal */
+.gmp-place-autocomplete, /* host element */
+.gmp-place-autocomplete * {
+  z-index: 99999 !important;
+}
+
+/* pac-container fallback if legacy styles are present */
+.pac-container {
+  z-index: 99999 !important;
+}

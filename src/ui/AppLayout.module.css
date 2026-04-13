@@ -1,0 +1,32 @@
+.appLayout{
+    display: grid;
+    grid-template-columns: 15rem 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+}
+.main{
+    padding: 2rem 2rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(150 , 150 , 150 , 0.6) transparent;
+}
+.myContainer{
+    margin: 0 auto;
+    max-width: 120rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.main::-webkit-scrollbar{
+    width: 6px;
+
+}
+.main::-webkit-scrollbar-track{
+background: transparent;
+}
+.main::-webkit-scrollbar-thumb{
+    background-color: rgba(150 , 150 , 150 , 0.6);
+    border-radius: 10px;
+
+}

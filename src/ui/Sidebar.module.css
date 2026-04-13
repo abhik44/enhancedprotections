@@ -1,0 +1,37 @@
+.sidebar{
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+ 
+    /* background-color: #273346; */
+    /* background-color: #2d3748; */
+    /* background-color: #1f2937; */
+    /* background-color: #778899; */
+    /* background-color: #6c7A89; */
+    background-color: #596773;
+    grid-row: 1/-1;
+    padding: 1.5rem 0.5rem 3.2rem 0.5rem;
+
+    /* scroll */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    border-right: 2px solid #f3f4f6;
+}
+.sidebarlogo{
+    width: 100px !important;
+   
+   
+}
+.sidebar::-webkit-scrollbar{
+    display: none;
+}
+.sidebar:has(:overflow)::-webkit-scrollbar,
+.sidebar:hover::-webkit-scrollbar{
+    display: block;
+    width: 6px;
+}
+.sidebar:hover::-webkit-scrollbar-thumb{
+    background-color: rgba(255 , 255 , 255 , 0.3);
+    border-radius: 10px;
+}

@@ -1,0 +1,57 @@
+.mynavlist{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none !important;
+    padding-left: 0rem;
+   
+}
+
+.myLink:link , .myLink:visited , .myLink{
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    /* color: rgb(63, 63, 64); */
+    color: #fff;
+   
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.5rem 0.8rem;
+    transition: all 0.3s;
+    text-decoration: none;
+
+    background-color: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+}
+.myLink:hover,
+.myLink:active,
+.myLink.active:link,
+.myLink.active:visited{
+    color:#e5e7eb  ;
+    /* background-color: #cbc7c7; */
+    background-color: #ce0e31;
+    border-radius: 10px;
+}
+.myLink svg{
+    width: 1rem;
+    height: 1rem;
+    color: 000;
+    transition: all 0.3s;
+}
+.myLink:hover svg,
+.myLink:active svg ,
+.myLink.active:link svg,
+.myLink.active:visited svg{
+    color: #fff;
+    /* background-color: #454545; */
+    background-color: #ce0e31;
+}
+.myLink:global(.active){
+    /* background-color: #454545; */
+    background-color: #ce0e31;
+    border-radius: 10px;
+
+}
