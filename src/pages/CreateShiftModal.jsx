@@ -1,18 +1,10 @@
 import styles from "./CreateStaff.module.css";
 import { useEffect, useRef, useState } from "react";
 import { db } from "../firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  serverTimestamp,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
+import { collection, addDoc, getDocs, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import toast from "react-hot-toast";
 
 export default function CreateShiftModal({ editingShift, onClose }) {
-  
   const modalId = "createShift";
   const modalRef = useRef(null);
 
@@ -25,7 +17,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     date: "",
     startTime: defaultStart,
     endTime: defaultEnd,
-    endTimeType : "close" ,
+    endTimeType: "close",
     siteName: "",
     staffname: "",
     notes: "",
@@ -41,15 +33,15 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     (async () => {
       try {
         const snap = await getDocs(collection(db, "staff"));
-       const list = snap.docs.map((d) => {
-        const data = d.data() ;
-        const fullname = (data?.firstname || "") + (data?.lastname ? " " + data.lastname : "");
-        return{
-          id : d.id ,
-          name : fullname.trim() || data?.email || "Unknown" ,
-        };
-       });
-       if(mounted) setStaffOptions(list) ;
+        const list = snap.docs.map((d) => {
+          const data = d.data();
+          const fullname = (data?.firstname || "") + (data?.lastname ? " " + data.lastname : "");
+          return {
+            id: d.id,
+            name: fullname.trim() || data?.email || "Unknown",
+          };
+        });
+        if (mounted) setStaffOptions(list);
       } catch (e) {
         console.error("Failed to load staff names:", e);
         setStaffOptions([]);
@@ -81,7 +73,6 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     modalRef.current = document.getElementById(modalId);
   }, []);
 
-  
   const toInputDate = (value) => {
     if (!value) return "";
     if (value?.toDate) {
@@ -110,14 +101,13 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     return "";
   };
 
-  
   useEffect(() => {
     if (editingShift) {
       setForm({
         date: toInputDate(editingShift.date),
         startTime: editingShift.startTime || defaultStart,
         endTime: editingShift.endTime && editingShift.endTime !== "close" ? editingShift.endTime : defaultEnd,
-        endTimeType : editingShift.endTime && editingShift.endTime === "Close" ? "close" : "time" ,
+        endTimeType: editingShift.endTime && editingShift.endTime === "Close" ? "close" : "time",
         siteName: editingShift.siteName || "",
         staffname: editingShift.staffname || "",
         notes: editingShift.notes || "",
@@ -125,7 +115,6 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     } else {
       resetForm();
     }
-  
   }, [editingShift]);
 
   const handleChange = (e) => {
@@ -151,24 +140,20 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     if (!form.siteName) return "Please select a site.";
     if (!form.staffname) return "Please select a staff member.";
 
-    if(form.endTimeType === "time") {
-      if(!form.endTime) return "Please select an end time" ;
-
+    if (form.endTimeType === "time") {
+      if (!form.endTime) return "Please select an end time";
 
       const start = parseTime(form.startTime);
-    const end = parseTime(form.endTime);
-    if (!start || !end) return "Invalid time format.";
-    if (end <= start) {
-      const endCopy = new Date(end.getTime());
-      endCopy.setDate(endCopy.getDate() + 1);
-
+      const end = parseTime(form.endTime);
+      if (!start || !end) return "Invalid time format.";
+      if (end <= start) {
+        const endCopy = new Date(end.getTime());
+        endCopy.setDate(endCopy.getDate() + 1);
 
         if (end <= start) return "End time must be after start time.";
-    }
-  
+      }
     }
 
-    
     return null;
   };
 
@@ -193,7 +178,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
       date: "",
       startTime: defaultStart,
       endTime: defaultEnd,
-      endTimeType : "close" ,
+      endTimeType: "close",
       siteName: "",
       staffname: "",
       notes: "",
@@ -213,23 +198,19 @@ export default function CreateShiftModal({ editingShift, onClose }) {
       return;
     }
 
-    
     if (isEdit) {
       try {
         const [y, m, d] = form.date.split("-").map(Number);
         const parts = form.startTime.split(":");
         if (parts.length < 2) throw new Error("Invalid start time");
         const [h, min] = parts.map(Number);
-        if (isNaN(y) || isNaN(m) || isNaN(d) || isNaN(h) || isNaN(min))
-          throw new Error("Invalid date or time");
+        if (isNaN(y) || isNaN(m) || isNaN(d) || isNaN(h) || isNaN(min)) throw new Error("Invalid date or time");
 
         const shiftStart = new Date(y, m - 1, d, h, min, 0, 0);
         const now = new Date();
 
         if (!(shiftStart > now)) {
-          toast.error(
-            "You can only edit shifts whose start time is still in the future."
-          );
+          toast.error("You can only edit shifts whose start time is still in the future.");
           return;
         }
       } catch (e) {
@@ -241,15 +222,12 @@ export default function CreateShiftModal({ editingShift, onClose }) {
 
     setSaving(true);
     try {
-
       const staff = staffOptions.find((st) => st.id === form.staffname);
-      const staffNameToSave = staff ? staff.name : "" ;
+      const staffNameToSave = staff ? staff.name : "";
 
-      const endTimeToSave = form.endTimeType === "close" ? "Close" : form.endTime || null ;
-
+      const endTimeToSave = form.endTimeType === "close" ? form.startTime : form.endTime || null;
 
       if (isEdit && editingShift?.id) {
-        
         const refDoc = doc(db, "shifts", editingShift.id);
         await updateDoc(refDoc, {
           date: form.date,
@@ -262,16 +240,15 @@ export default function CreateShiftModal({ editingShift, onClose }) {
         });
         toast.success("Shift updated successfully");
       } else {
-       
         await addDoc(collection(db, "shifts"), {
           date: form.date,
           startTime: form.startTime,
           endTime: endTimeToSave,
           siteName: form.siteName,
-          userId : form.staffname,
+          userId: form.staffname,
           staffname: staffNameToSave,
-          clockin : "0" ,
-          clockout : "0" ,
+          clockin: "0",
+          clockout: "0",
           notes: form.notes || null,
           createdAt: serverTimestamp(),
         });
@@ -288,26 +265,12 @@ export default function CreateShiftModal({ editingShift, onClose }) {
   };
 
   return (
-    <div
-      className="modal fade"
-      id={modalId}
-      tabIndex="-1"
-      aria-labelledby={modalId}
-      aria-hidden="true"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-    >
+    <div className="modal fade" id={modalId} tabIndex="-1" aria-labelledby={modalId} aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
       <div className="modal-dialog modal-lg">
         <div className="modal-content">
           <div className="modal-header px-4">
             <h5 className="mb-0">{isEdit ? "Edit Shift" : "Create Shift"}</h5>
-            <button
-              type="button"
-              className="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              onClick={handleClose}
-            />
+            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={handleClose} />
           </div>
 
           <div className="modal-body px-4">
@@ -318,13 +281,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
                   <label htmlFor="date" className="form-label fw-medium">
                     Select date
                   </label>
-                  <input
-                    type="date"
-                    id="date"
-                    className={`form-control ${styles.inputBox}`}
-                    value={form.date}
-                    onChange={handleChange}
-                  />
+                  <input type="date" id="date" className={`form-control ${styles.inputBox}`} value={form.date} onChange={handleChange} />
                 </div>
 
                 {/* start time */}
@@ -332,72 +289,42 @@ export default function CreateShiftModal({ editingShift, onClose }) {
                   <label htmlFor="startTime" className="form-label fw-medium">
                     Start time
                   </label>
-                  <input
-                    type="time"
-                    id="startTime"
-                    className={`form-control ${styles.inputBox}`}
-                    value={form.startTime}
-                    onChange={handleChange}
-                  />
+                  <input type="time" id="startTime" className={`form-control ${styles.inputBox}`} value={form.startTime} onChange={handleChange} />
                 </div>
 
                 {/* end time type */}
                 <div className="col-md-4 mb-3">
-              <label htmlFor="endTimeType" className="form-label fw-medium">
-              End Time type
+                  <label htmlFor="endTimeType" className="form-label fw-medium">
+                    End Time type
+                  </label>
 
-              </label>
-
-              <select 
-              id="endTimeType"
-              className={`form-select ${styles.selectBox}`} 
-              aria-label="End time type"
-              value={form.endTimeType}
-              onChange={handleChange}
-              >
-                
-                <option value="time" >Time</option>
-                <option value="close" >Close</option>
-
-              </select>
-
+                  <select id="endTimeType" className={`form-select ${styles.selectBox}`} aria-label="End time type" value={form.endTimeType} onChange={handleChange}>
+                    <option value="time">Time</option>
+                    <option value="close">Close</option>
+                  </select>
                 </div>
-
 
                 {/* end time type */}
 
                 {/* end time */}
-                { form.endTimeType === "time" && (
-
+                {form.endTimeType === "time" && (
                   <div className="col-md-4 mb-3">
-                  <label htmlFor="endTime" className="form-label fw-medium">
-                    End time
-                  </label>
-                  <input
-                    type="time"
-                    id="endTime"
-                    className={`form-control ${styles.inputBox}`}
-                    value={form.endTime}
-                    onChange={handleChange}
-                  />
-                </div>
+                    <label htmlFor="endTime" className="form-label fw-medium">
+                      End time
+                    </label>
+                    <input type="time" id="endTime" className={`form-control ${styles.inputBox}`} value={form.endTime} onChange={handleChange} />
+                  </div>
                 )}
-                
 
                 {/* staff name dropdown */}
                 <div className="col-md-4 mb-3">
                   <label htmlFor="staffname" className="form-label fw-medium">
                     Select staff
                   </label>
-                  <select
-                    id="staffname"
-                    className={`form-select ${styles.selectBox}`}
-                    value={form.staffname}
-                    onChange={handleChange}
-                  >
+                  <select id="staffname" className={`form-select ${styles.selectBox}`} value={form.staffname} onChange={handleChange}>
                     <option value="">Select staff</option>
                     {staffOptions.length > 0 ? (
-                     staffOptions.map((s) => (
+                      staffOptions.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.name}
                         </option>
@@ -413,12 +340,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
                   <label htmlFor="siteName" className="form-label fw-medium">
                     Select site
                   </label>
-                  <select
-                    id="siteName"
-                    className={`form-select ${styles.selectBox}`}
-                    value={form.siteName}
-                    onChange={handleChange}
-                  >
+                  <select id="siteName" className={`form-select ${styles.selectBox}`} value={form.siteName} onChange={handleChange}>
                     <option value="">Select site</option>
                     {siteOptions.length > 0 ? (
                       siteOptions.map((s) => (
@@ -437,33 +359,17 @@ export default function CreateShiftModal({ editingShift, onClose }) {
                   <label htmlFor="notes" className="form-label fw-medium">
                     Notes
                   </label>
-                  <textarea
-                    id="notes"
-                    className={`form-control ${styles.textareaBox}`}
-                    rows="3"
-                    value={form.notes}
-                    onChange={handleChange}
-                  />
+                  <textarea id="notes" className={`form-control ${styles.textareaBox}`} rows="3" value={form.notes} onChange={handleChange} />
                 </div>
               </div>
             </form>
           </div>
 
           <div className="modal-footer px-4 pb-4 border-0">
-            <button
-              type="button"
-              className="btn btn-secondary px-3"
-              data-bs-dismiss="modal"
-              onClick={handleClose}
-            >
+            <button type="button" className="btn btn-secondary px-3" data-bs-dismiss="modal" onClick={handleClose}>
               Close
             </button>
-            <button
-              type="button"
-              className="btn btn-danger custom-red-bg text-white fw-medium px-3"
-              onClick={handleSave}
-              disabled={saving}
-            >
+            <button type="button" className="btn btn-danger custom-red-bg text-white fw-medium px-3" onClick={handleSave} disabled={saving}>
               {saving ? "Saving..." : isEdit ? "Update" : "Save"}
             </button>
           </div>
