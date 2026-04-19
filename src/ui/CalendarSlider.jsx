@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./CalendarSlider.module.css";
 
-export default function CalendarSlider({ windowDays = 10, onChange }) {
+export default function CalendarSlider({ windowDays = 7, onChange }) {
   const today = new Date();
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 

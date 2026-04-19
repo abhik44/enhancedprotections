@@ -5,66 +5,70 @@ import { db } from "../firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import Spinner from "../ui/Spinner";
 import { HiPencilSquare } from "react-icons/hi2";
-
+import { deleteDoc, doc } from "firebase/firestore";
+import { HiTrash } from "react-icons/hi2";
 
 function Site() {
-
-  const [sites , setSites] = useState([]);
-  const [loading , setLoading] = useState(true);
+  const [sites, setSites] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // search state
-  const [searchTerm , setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Editing state
-  const [editingSite , setEditingSite] = useState(null);
-
+  const [editingSite, setEditingSite] = useState(null);
 
   useEffect(() => {
     setLoading(true);
-   const coll = collection (db , "sites");
+    const coll = collection(db, "sites");
 
-   const unsub = onSnapshot (
-    coll ,
-    (snapshot) => {
-      const items = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
-      setSites(items);
-      setLoading(false);
-    },
-    (err) => {
-      console.error("Failed to fetch sites" , err);
-      setSites([]);
-      setLoading(false);
-    }
-   );
-   return ()  => unsub();
-
-  } , []);
+    const unsub = onSnapshot(
+      coll,
+      (snapshot) => {
+        const items = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setSites(items);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Failed to fetch sites", err);
+        setSites([]);
+        setLoading(false);
+      },
+    );
+    return () => unsub();
+  }, []);
 
   // Filter by sitename
+  const handleDeleteSite = async (siteId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this site?");
 
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "sites", siteId));
+    } catch (err) {
+      console.error("Error deleting site:", err);
+      alert("Failed to delete site");
+    }
+  };
   const filteredSites = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    if(!q) return sites;
-    
-    return sites.filter ((s) => 
-    (s.siteName || "").toLowerCase().includes(q)
-    );
-  } , [searchTerm , sites]);
-  
+    if (!q) return sites;
+
+    return sites.filter((s) => (s.siteName || "").toLowerCase().includes(q));
+  }, [searchTerm, sites]);
 
   // when clicking create site
-const handleOpenCreate = () => {
-  setEditingSite(null);
-};
- 
-const handleOpenEdit = (site) => {
+  const handleOpenCreate = () => {
+    setEditingSite(null);
+  };
+
+  const handleOpenEdit = (site) => {
     setEditingSite(site);
-};
-
-
+  };
 
   return (
     <>
@@ -72,26 +76,14 @@ const handleOpenEdit = (site) => {
         <h3 className="text-4a">Sites</h3>
 
         <div className="d-flex justify-content-end gap-4">
-
           {/* Search bar */}
           <div style={{ width: "500px" }}>
-            <Search 
-            value={searchTerm}
-            onChange = {(e) => setSearchTerm(e.target.value)}
-            placeholder="Search site name.."
-             />
-           
+            <Search value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search site name.." />
           </div>
 
           {/* Button for Create Site Modal */}
           <div>
-            <button
-              type="button"
-              className="btn custom-red-bg text-white fw-medium"
-              data-bs-toggle="modal"
-              data-bs-target="#createSite"
-              onClick={handleOpenCreate}
-            >
+            <button type="button" className="btn custom-red-bg text-white fw-medium" data-bs-toggle="modal" data-bs-target="#createSite" onClick={handleOpenCreate}>
               + Create Site
             </button>
 
@@ -116,7 +108,8 @@ const handleOpenEdit = (site) => {
                 <th>Site Name</th>
                 <th>Latitude</th>
                 <th>Longitude</th>
-                <th >Edit</th>
+                <th>Edit</th>
+                <th>Delete</th>
               </tr>
             </thead>
 
@@ -127,12 +120,15 @@ const handleOpenEdit = (site) => {
                   <td>{s.latitude ?? "-"}</td>
                   <td>{s.longitude ?? "-"}</td>
                   <td className="ps-3">
-                    <button type="button" className="btn btn-link text-black p-0 border-0" data-bs-toggle="modal" data-bs-target="#createSite" 
-                    onClick={() => handleOpenEdit(s)}
-                    >
-                    
-                    <HiPencilSquare/>
-                    </button></td>
+                    <button type="button" className="btn btn-link text-black p-0 border-0" data-bs-toggle="modal" data-bs-target="#createSite" onClick={() => handleOpenEdit(s)}>
+                      <HiPencilSquare />
+                    </button>
+                  </td>
+                  <td>
+                    <button className="btn btn-link text-danger  p-0 border-0" onClick={() => handleDeleteSite(s.id)}>
+                      <HiTrash />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

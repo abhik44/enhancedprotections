@@ -7,6 +7,8 @@ import { HiPencilSquare } from "react-icons/hi2";
 import CreateStaffModal from "./CreateStaffModal";
 import { HiEye } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
+import { deleteDoc, doc } from "firebase/firestore";
+import { HiTrash } from "react-icons/hi2";
 
 function Staff() {
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ function Staff() {
   useEffect(() => {
     setLoading(true);
 
-    const q = query(collection(db, "staff"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "staff"), orderBy("firstname", "asc"));
 
     const unsubscribe = onSnapshot(
       q,
@@ -40,6 +42,19 @@ function Staff() {
 
     return () => unsubscribe();
   }, []);
+
+  const handleDelete = async (staffId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this staff?");
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "staff", staffId));
+    } catch (err) {
+      console.error("Error deleting staff:", err);
+      alert("Failed to delete staff");
+    }
+  };
 
   const filteredStaffs = useMemo(() => {
     const q = (searchTerm || "").trim().toLowerCase();
@@ -103,6 +118,7 @@ function Staff() {
                 <th>Profile</th>
                 <th>Edit</th>
                 <th>View Document</th>
+                <th>Delete</th>
               </tr>
             </thead>
 
@@ -144,6 +160,11 @@ function Staff() {
                   <td className="ps-5 ">
                     <button type="button" className="btn btn-link p-0 border-0 text-black" onClick={() => navigate("viewStaffSignedDocuments", { state: { staffId: staff.id } })}>
                       <HiEye />
+                    </button>
+                  </td>
+                  <td>
+                    <button className="btn btn-link text-danger  p-0 border-0" onClick={() => handleDelete(staff.id)}>
+                      <HiTrash />
                     </button>
                   </td>
                 </tr>

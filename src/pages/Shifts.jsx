@@ -7,7 +7,8 @@ import Spinner from "../ui/Spinner";
 import CalendarSlider from "../ui/CalendarSlider";
 import { formatToAmPm } from "../utils/formatTime";
 import { HiPencilSquare } from "react-icons/hi2";
-
+import { deleteDoc, doc } from "firebase/firestore";
+import { HiTrash } from "react-icons/hi2";
 //
 // ✅ BULLETPROOF DATE PARSER
 //
@@ -90,6 +91,19 @@ function Shifts() {
     return () => unsub();
   }, []);
 
+  const handleDelete = async (shiftId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this shift?");
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "shifts", shiftId));
+    } catch (err) {
+      console.error("Error deleting shift:", err);
+      alert("Failed to delete shift");
+    }
+  };
+
   //
   // 🔥 FINAL FILTER (WORKING)
   //
@@ -163,6 +177,7 @@ function Shifts() {
                 <th>End</th>
                 <th>Site</th>
                 <th>Edit</th>
+                <th>Delete</th>
               </tr>
             </thead>
 
@@ -183,6 +198,11 @@ function Shifts() {
                     ) : (
                       <HiPencilSquare style={{ opacity: 0.3 }} />
                     )}
+                  </td>
+                  <td>
+                    <button className="btn btn-link text-danger p-0 border-0" onClick={() => handleDelete(s.id)}>
+                      <HiTrash />
+                    </button>
                   </td>
                 </tr>
               ))}

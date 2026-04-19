@@ -6,6 +6,8 @@ import { collection, query, where, orderBy, onSnapshot } from "firebase/firestor
 import { useParams } from "react-router-dom";
 import { HiEye } from "react-icons/hi";
 import CreateSiteDocumentModal from "./CreateSiteDocumentModal";
+import { deleteDoc, doc } from "firebase/firestore";
+import { HiTrash } from "react-icons/hi2";
 
 function SiteDocumentDetails() {
   const { siteId } = useParams();
@@ -39,6 +41,19 @@ function SiteDocumentDetails() {
 
     return () => unsubscribe();
   }, [siteId]);
+
+  const handleDelete = async (documentid) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this document?");
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteDoc(doc(db, "sitedocuments", documentid));
+    } catch (err) {
+      console.error("Error deleting document:", err);
+      alert("Failed to delete document");
+    }
+  };
 
   // search filter
   const filteredDocuments = useMemo(() => {
@@ -87,6 +102,7 @@ function SiteDocumentDetails() {
               <tr>
                 <th>Document Name</th>
                 <th>Action</th>
+                <th>Delete</th>
               </tr>
             </thead>
 
@@ -101,6 +117,11 @@ function SiteDocumentDetails() {
                         <HiEye />
                       </button>
                     )}
+                  </td>
+                  <td>
+                    <button className="btn btn-link text-danger  p-0 border-0" onClick={() => handleDelete(doc.id)}>
+                      <HiTrash />
+                    </button>
                   </td>
                 </tr>
               ))}
