@@ -63,9 +63,6 @@ export default async function handler(req, res) {
             title: "New Shift Assigned",
             body: `Site: ${siteName} | Date: ${date}`,
           },
-          data: {
-            screen: "myschedule",
-          },
         },
       }),
     });
