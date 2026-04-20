@@ -64,7 +64,7 @@ export default async function handler(req, res) {
             body: `Site: ${siteName} | Date: ${date}`,
           },
           data: {
-            type: "shift",
+            screen: "myschedule",
           },
         },
       }),
