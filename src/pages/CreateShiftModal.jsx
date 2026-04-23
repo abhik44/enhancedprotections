@@ -127,10 +127,23 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     if (!form.staffname) return "Please select staff.";
 
     if (form.endTimeType === "time") {
-      const start = parseTime(form.startTime);
-      const end = parseTime(form.endTime);
-      if (!start || !end) return "Invalid time";
-      if (end <= start) return "End must be after start";
+      if (!form.endTime) return "Please select end time";
+
+      const [sh, sm] = form.startTime.split(":").map(Number);
+      const [eh, em] = form.endTime.split(":").map(Number);
+
+      let startMin = sh * 60 + sm;
+      let endMin = eh * 60 + em;
+
+      // ✅ allow overnight shift
+      if (endMin < startMin) {
+        endMin += 24 * 60;
+      }
+
+      // ❌ still prevent zero or negative duration
+      if (endMin === startMin) {
+        return "Shift duration cannot be zero";
+      }
     }
 
     return null;

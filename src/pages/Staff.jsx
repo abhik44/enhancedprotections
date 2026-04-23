@@ -14,7 +14,7 @@ function Staff() {
   const navigate = useNavigate();
   const [staffs, setStaffs] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [selectedEmployment, setSelectedEmployment] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [editingStaff, setEditingStaff] = useState(null);
@@ -76,7 +76,29 @@ function Staff() {
   }, [staffs, searchTerm]);
 
   const handleOpenCreate = () => setEditingStaff(null);
+  const formatDate = (date) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString();
+  };
 
+  const formatDateTime = (date) => {
+    if (!date) return "-";
+
+    try {
+      // Firestore Timestamp → JS Date
+      const d = date.toDate ? date.toDate() : new Date(date);
+
+      return d.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      return "-";
+    }
+  };
   const handleOpenEdit = (staff) => setEditingStaff(staff);
 
   return (
@@ -118,6 +140,7 @@ function Staff() {
                 <th>Profile</th>
                 <th>Edit</th>
                 <th>View Document</th>
+                <th>Employment Details</th>
                 <th>Delete</th>
               </tr>
             </thead>
@@ -163,6 +186,12 @@ function Staff() {
                     </button>
                   </td>
                   <td>
+                    <button className="btn btn-link p-0 border-0 text-black" data-bs-toggle="modal" data-bs-target="#employmentModal" onClick={() => setSelectedEmployment(staff)}>
+                      <HiEye />
+                    </button>
+                  </td>
+
+                  <td>
                     <button className="btn btn-link text-danger  p-0 border-0" onClick={() => handleDelete(staff.id)}>
                       <HiTrash />
                     </button>
@@ -174,6 +203,117 @@ function Staff() {
         )}
       </div>
 
+      <div className="modal fade" id="employmentModal" tabIndex="-1">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Employment Details</h5>
+              <button className="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div className="modal-body">
+              {selectedEmployment?.employmentDetails ? (
+                <div className="row">
+                  <h4 className="fw-bold mb-3">Personal Details</h4>
+
+                  <p>
+                    <strong>Name:</strong> {selectedEmployment.employmentDetails.firstName} {selectedEmployment.employmentDetails.lastName}
+                  </p>
+                  <p>
+                    <strong>Gender:</strong> {selectedEmployment.employmentDetails.gender}
+                  </p>
+                  <p>
+                    <strong>DOB:</strong> {formatDate(selectedEmployment.employmentDetails.dob)}
+                  </p>
+                  <p>
+                    <strong>Start Date:</strong> {formatDate(selectedEmployment.employmentDetails.startDate)}
+                  </p>
+                  <p>
+                    <strong>Tax File:</strong> {selectedEmployment.employmentDetails.taxFile}
+                  </p>
+
+                  <hr />
+
+                  <h4 className="fw-bold mb-3">Contact</h4>
+                  <p>
+                    <strong>Address:</strong> {selectedEmployment.employmentDetails.address}
+                  </p>
+                  <p>
+                    <strong>Suburb:</strong> {selectedEmployment.employmentDetails.suburb}
+                  </p>
+                  <p>
+                    <strong>State:</strong> {selectedEmployment.employmentDetails.state}
+                  </p>
+                  <p>
+                    <strong>Postcode:</strong> {selectedEmployment.employmentDetails.postcode}
+                  </p>
+                  <p>
+                    <strong>Mobile:</strong> {selectedEmployment.employmentDetails.mobile}
+                  </p>
+                  <p>
+                    <strong>Home Phone:</strong> {selectedEmployment.employmentDetails.homePhone}
+                  </p>
+
+                  <hr />
+
+                  <p>
+                    <strong>Next of Kin:</strong> {selectedEmployment.employmentDetails.nextOfKin}
+                  </p>
+                  <p>
+                    <strong>Relationship:</strong> {selectedEmployment.employmentDetails.relationship}
+                  </p>
+
+                  <hr />
+
+                  <h4 className="fw-bold mb-3">Bank</h4>
+                  <p>
+                    <strong>Bank:</strong> {selectedEmployment.employmentDetails.bank}
+                  </p>
+                  <p>
+                    <strong>Branch:</strong> {selectedEmployment.employmentDetails.branch}
+                  </p>
+                  <p>
+                    <strong>Account Name:</strong> {selectedEmployment.employmentDetails.accountName}
+                  </p>
+                  <p>
+                    <strong>BSB:</strong> {selectedEmployment.employmentDetails.bsb}
+                  </p>
+                  <p>
+                    <strong>Account Number:</strong> {selectedEmployment.employmentDetails.accountNumber}
+                  </p>
+
+                  <hr />
+
+                  <h4 className="fw-bold mb-3">Superannuation</h4>
+                  <p>
+                    <strong>Fund:</strong> {selectedEmployment.employmentDetails.superFund}
+                  </p>
+                  <p>
+                    <strong>Member No:</strong> {selectedEmployment.employmentDetails.memberNumber}
+                  </p>
+                  <p>
+                    <strong>Employer Contribution:</strong> {selectedEmployment.employmentDetails.employerContribution}
+                  </p>
+
+                  <hr />
+
+                  <p className="text-muted">
+                    <strong>Last Updated:</strong> {formatDateTime(selectedEmployment.employmentDetails.updatedAt)}
+                  </p>
+                </div>
+              ) : (
+                <p>No employment details found.</p>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn btn-secondary" data-bs-dismiss="modal">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       <CreateStaffModal editingStaff={editingStaff} onClose={() => setEditingStaff(null)} />
     </>
   );

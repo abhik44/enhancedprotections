@@ -141,6 +141,40 @@ function Shifts() {
     return dt && dt > new Date();
   };
 
+  const getShiftStatus = (status) => {
+    const s = String(status);
+
+    if (s === "1") return "Accepted";
+    if (s === "2") return "Rejected";
+    return "Pending";
+  };
+
+  const calculateWorkedHours = (clockin, clockout) => {
+    if (clockin == "0" || clockout == "0") return "-";
+
+    try {
+      const [sh, sm] = clockin.split(":").map(Number);
+      const [eh, em] = clockout.split(":").map(Number);
+
+      let startMin = sh * 60 + sm;
+      let endMin = eh * 60 + em;
+
+      // ✅ handle overnight clockout (rare but safe)
+      if (endMin < startMin) {
+        endMin += 24 * 60;
+      }
+
+      const diff = endMin - startMin;
+
+      const hours = Math.floor(diff / 60);
+      const minutes = diff % 60;
+
+      return `${hours}h ${minutes}m`;
+    } catch (e) {
+      return "-";
+    }
+  };
+
   return (
     <>
       <div className="d-flex justify-content-between mb-3">
@@ -175,7 +209,10 @@ function Shifts() {
                 <th>Date</th>
                 <th>Start</th>
                 <th>End</th>
+                <th>Total Hours Worked</th>
+
                 <th>Site</th>
+                <th>Status</th>
                 <th>Edit</th>
                 <th>Delete</th>
               </tr>
@@ -187,8 +224,14 @@ function Shifts() {
                   <td>{s.staffname}</td>
                   <td>{formatDate(s.date)}</td>
                   <td>{formatToAmPm(s.startTime)}</td>
-                  <td>{formatToAmPm(s.endTime)}</td>
+                  <td>{s.startTime === s.endTime ? "Close" : formatToAmPm(s.endTime)}</td>
+                  <td>{calculateWorkedHours(s.clockin, s.clockout)}</td>
                   <td>{s.siteName}</td>
+                  <td>
+                    <span className={s.shiftStatus === "1" ? "text-success fw-bold" : s.shiftStatus === "2" ? "text-danger fw-bold" : "text-warning fw-bold"}>
+                      {getShiftStatus(s.shiftStatus)}
+                    </span>
+                  </td>
 
                   <td>
                     {canEditShift(s) ? (
