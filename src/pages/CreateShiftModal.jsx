@@ -154,11 +154,19 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     if (!el) return;
 
     const bs = window.bootstrap;
-    if (!bs) return;
 
-    let inst = bs.Modal.getInstance(el);
-    if (!inst) inst = new bs.Modal(el);
-    inst.hide();
+    if (bs) {
+      let inst = bs.Modal.getInstance(el);
+      if (!inst) inst = new bs.Modal(el);
+      inst.hide();
+    }
+
+    // ✅ ALWAYS ensure cleanup (this is what you’re missing)
+    el.classList.remove("show");
+    el.setAttribute("aria-hidden", "true");
+    el.style.display = "none";
+
+    document.querySelectorAll(".modal-backdrop").forEach((b) => b.remove());
   };
 
   const resetForm = () => {
@@ -178,6 +186,22 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     resetForm();
     onClose?.();
   };
+
+  useEffect(() => {
+    if (!editingShift) return;
+
+    const staffMatch = staffOptions.find((s) => s.name === editingShift.staffname);
+
+    setForm({
+      date: editingShift.date || "",
+      startTime: editingShift.startTime || defaultStart,
+      endTime: editingShift.endTime && editingShift.endTime !== "close" ? editingShift.endTime : defaultEnd,
+      endTimeType: editingShift.endTime === editingShift.startTime ? "close" : "time",
+      siteName: editingShift.siteName || "",
+      staffname: staffMatch ? staffMatch.id : "", // ✅ IMPORTANT
+      notes: editingShift.notes || "",
+    });
+  }, [editingShift, staffOptions]);
 
   const handleSave = async () => {
     const err = validate();
@@ -202,8 +226,9 @@ export default function CreateShiftModal({ editingShift, onClose }) {
           startTime: form.startTime,
           endTime: endTimeToSave,
           siteName: form.siteName,
-          staffname: form.staffname,
-          notes: form.notes || null,
+          staffname: staffNameToSave, // ✅ name
+          userId: form.staffname, // ✅ id
+          //           notes: form.notes || null,
           updatedAt: serverTimestamp(),
         });
 

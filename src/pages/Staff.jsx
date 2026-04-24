@@ -257,10 +257,7 @@ function Staff() {
                   <hr />
 
                   <p>
-                    <strong>Next of Kin:</strong> {selectedEmployment.employmentDetails.nextOfKin}
-                  </p>
-                  <p>
-                    <strong>Relationship:</strong> {selectedEmployment.employmentDetails.relationship}
+                    <strong>Claim tax free threshold:</strong> {selectedEmployment.employmentDetails.claimtax}
                   </p>
 
                   <hr />
