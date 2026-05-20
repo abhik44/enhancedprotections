@@ -209,6 +209,8 @@ function Shifts() {
                 <th>Date</th>
                 <th>Start</th>
                 <th>End</th>
+                <th>Clocked In</th>
+                <th>Clocked Out</th>
                 <th>Total Hours Worked</th>
 
                 <th>Site</th>
@@ -225,6 +227,9 @@ function Shifts() {
                   <td>{formatDate(s.date)}</td>
                   <td>{formatToAmPm(s.startTime)}</td>
                   <td>{s.startTime === s.endTime ? "Close" : formatToAmPm(s.endTime)}</td>
+                  <td>{s.clockin}</td>
+                  <td>{s.clockout}</td>
+
                   <td>{calculateWorkedHours(s.clockin, s.clockout)}</td>
                   <td>{s.siteName}</td>
                   <td>
