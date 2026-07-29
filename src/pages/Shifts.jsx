@@ -9,56 +9,8 @@ import { formatToAmPm } from "../utils/formatTime";
 import { HiPencilSquare } from "react-icons/hi2";
 import { deleteDoc, doc } from "firebase/firestore";
 import { HiTrash } from "react-icons/hi2";
-//
-// ✅ BULLETPROOF DATE PARSER
-//
-function parseDate(value) {
-  if (!value) return null;
-
-  // Firestore Timestamp
-  if (value?.seconds) {
-    return new Date(value.seconds * 1000);
-  }
-
-  if (value?.toDate) {
-    return value.toDate();
-  }
-
-  // JS Date
-  if (value instanceof Date) {
-    return value;
-  }
-
-  // STRING FORMATS
-  if (typeof value === "string") {
-    // DD/MM/YYYY  ✅ YOUR CASE
-    if (value.includes("/")) {
-      const [day, month, year] = value.split("/").map(Number);
-      if (day && month && year) {
-        return new Date(year, month - 1, day);
-      }
-    }
-
-    // fallback
-    const d = new Date(value);
-    if (!isNaN(d)) return d;
-  }
-
-  return null;
-}
-
-function formatDate(value) {
-  const d = parseDate(value);
-  return d ? d.toLocaleDateString() : "-";
-}
-
-function getShiftStartDateTime(shift) {
-  const d = parseDate(shift.date);
-  if (!d || !shift.startTime) return null;
-
-  const [h, m] = shift.startTime.split(":").map(Number);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m);
-}
+import { formatDate, isDateWithinRange } from "../utils/dateUtils";
+import { calculateWorkedHours, formatMinutes, sumBreakMinutes } from "../utils/hours";
 
 function Shifts() {
   const [shifts, setShifts] = useState([]);
@@ -113,33 +65,11 @@ function Shifts() {
     return shifts.filter((s) => {
       // search
       const matchesSearch = !q || (s.staffname || "").toLowerCase().includes(q);
+      if (!matchesSearch) return false;
 
-      // no date filter yet
-      if (!dateRange.start || !dateRange.end) {
-        return matchesSearch;
-      }
-
-      const shiftDate = parseDate(s.date);
-      if (!shiftDate) return false;
-
-      // normalize ALL to midnight
-      const sd = new Date(shiftDate);
-      sd.setHours(0, 0, 0, 0);
-
-      const start = new Date(dateRange.start);
-      start.setHours(0, 0, 0, 0);
-
-      const end = new Date(dateRange.end);
-      end.setHours(0, 0, 0, 0);
-
-      return sd >= start && sd <= end && matchesSearch;
+      return isDateWithinRange(s.date, dateRange.start, dateRange.end);
     });
   }, [searchTerm, shifts, dateRange]);
-
-  const canEditShift = (shift) => {
-    const dt = getShiftStartDateTime(shift);
-    return dt && dt > new Date();
-  };
 
   const getShiftStatus = (status) => {
     const s = String(status);
@@ -147,32 +77,6 @@ function Shifts() {
     if (s === "1") return "Accepted";
     if (s === "2") return "Rejected";
     return "Pending";
-  };
-
-  const calculateWorkedHours = (clockin, clockout) => {
-    if (clockin == "0" || clockout == "0") return "-";
-
-    try {
-      const [sh, sm] = clockin.split(":").map(Number);
-      const [eh, em] = clockout.split(":").map(Number);
-
-      let startMin = sh * 60 + sm;
-      let endMin = eh * 60 + em;
-
-      // ✅ handle overnight clockout (rare but safe)
-      if (endMin < startMin) {
-        endMin += 24 * 60;
-      }
-
-      const diff = endMin - startMin;
-
-      const hours = Math.floor(diff / 60);
-      const minutes = diff % 60;
-
-      return `${hours}h ${minutes}m`;
-    } catch (e) {
-      return "-";
-    }
   };
 
   return (
@@ -211,6 +115,7 @@ function Shifts() {
                 <th>End</th>
                 <th>Clocked In</th>
                 <th>Clocked Out</th>
+                <th>Breaks</th>
                 <th>Total Hours Worked</th>
 
                 <th>Site</th>
@@ -229,8 +134,9 @@ function Shifts() {
                   <td>{s.startTime === s.endTime ? "Close" : formatToAmPm(s.endTime)}</td>
                   <td>{s.clockin}</td>
                   <td>{s.clockout}</td>
+                  <td>{formatMinutes(sumBreakMinutes(s.breaks))}</td>
 
-                  <td>{calculateWorkedHours(s.clockin, s.clockout)}</td>
+                  <td>{calculateWorkedHours(s.clockin, s.clockout, s.breaks)}</td>
                   <td>{s.siteName}</td>
                   <td>
                     <span className={s.shiftStatus === "1" ? "text-success fw-bold" : s.shiftStatus === "2" ? "text-danger fw-bold" : "text-warning fw-bold"}>
@@ -239,13 +145,9 @@ function Shifts() {
                   </td>
 
                   <td>
-                    {canEditShift(s) ? (
-                      <button className="btn btn-link" data-bs-toggle="modal" data-bs-target="#createShift" onClick={() => setEditingShift(s)}>
-                        <HiPencilSquare />
-                      </button>
-                    ) : (
-                      <HiPencilSquare style={{ opacity: 0.3 }} />
-                    )}
+                    <button className="btn btn-link" data-bs-toggle="modal" data-bs-target="#createShift" onClick={() => setEditingShift(s)}>
+                      <HiPencilSquare />
+                    </button>
                   </td>
                   <td>
                     <button className="btn btn-link text-danger p-0 border-0" onClick={() => handleDelete(s.id)}>

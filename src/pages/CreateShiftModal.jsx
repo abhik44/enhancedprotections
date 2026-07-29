@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, getDocs, serverTimestamp, doc, updateDoc, getDoc } from "firebase/firestore";
 import toast from "react-hot-toast";
+import { spanMinutes, sumBreakMinutes, timeToMinutes } from "../utils/hours";
 
 export default function CreateShiftModal({ editingShift, onClose }) {
   const modalId = "createShift";
@@ -21,6 +22,9 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     siteName: "",
     staffname: "",
     notes: "",
+    clockin: "0",
+    clockout: "0",
+    breaks: [],
   });
 
   const [saving, setSaving] = useState(false);
@@ -129,20 +133,25 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     if (form.endTimeType === "time") {
       if (!form.endTime) return "Please select end time";
 
-      const [sh, sm] = form.startTime.split(":").map(Number);
-      const [eh, em] = form.endTime.split(":").map(Number);
-
-      let startMin = sh * 60 + sm;
-      let endMin = eh * 60 + em;
-
-      // ✅ allow overnight shift
-      if (endMin < startMin) {
-        endMin += 24 * 60;
-      }
-
-      // ❌ still prevent zero or negative duration
-      if (endMin === startMin) {
+      // ✅ allow overnight shift, still prevent zero or negative duration
+      const duration = spanMinutes(form.startTime, form.endTime);
+      if (!duration) {
         return "Shift duration cannot be zero";
+      }
+    }
+
+    for (let i = 0; i < form.breaks.length; i++) {
+      const b = form.breaks[i];
+      const breakSpan = spanMinutes(b.start, b.end);
+      if (b.end !== "0" && (!breakSpan || breakSpan <= 0)) {
+        return `Break ${i + 1} end time must be after start time.`;
+      }
+    }
+
+    if (form.clockin !== "0" && form.clockout !== "0") {
+      const shiftSpan = spanMinutes(form.clockin, form.clockout);
+      if (!shiftSpan || shiftSpan <= sumBreakMinutes(form.breaks)) {
+        return "Clock out must be after clock in, accounting for breaks.";
       }
     }
 
@@ -178,6 +187,9 @@ export default function CreateShiftModal({ editingShift, onClose }) {
       siteName: "",
       staffname: "",
       notes: "",
+      clockin: "0",
+      clockout: "0",
+      breaks: [],
     });
     setSaving(false);
   };
@@ -200,8 +212,19 @@ export default function CreateShiftModal({ editingShift, onClose }) {
       siteName: editingShift.siteName || "",
       staffname: staffMatch ? staffMatch.id : "", // ✅ IMPORTANT
       notes: editingShift.notes || "",
+      clockin: editingShift.clockin || "0",
+      clockout: editingShift.clockout || "0",
+      breaks: Array.isArray(editingShift.breaks) ? editingShift.breaks.map((b) => ({ ...b })) : [],
     });
   }, [editingShift, staffOptions]);
+
+  const addBreak = () => setForm((s) => ({ ...s, breaks: [...s.breaks, { start: "09:00", end: "0" }] }));
+  const removeBreak = (i) => setForm((s) => ({ ...s, breaks: s.breaks.filter((_, idx) => idx !== i) }));
+  const updateBreak = (i, key, value) =>
+    setForm((s) => ({
+      ...s,
+      breaks: s.breaks.map((b, idx) => (idx === i ? { ...b, [key]: value } : b)),
+    }));
 
   const handleSave = async () => {
     const err = validate();
@@ -218,7 +241,79 @@ export default function CreateShiftModal({ editingShift, onClose }) {
 
       const endTimeToSave = form.endTimeType === "close" ? form.startTime : form.endTime || null;
 
-      if (isEdit && editingShift?.id) {
+      const formatLocalDate = (value) => {
+        const y = value.getFullYear();
+        const m = String(value.getMonth() + 1).padStart(2, "0");
+        const d = String(value.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      };
+
+      const createShiftDoc = async ({ date, startTime, endTime }) => {
+        await addDoc(collection(db, "shifts"), {
+          date,
+          startTime,
+          endTime,
+          siteName: form.siteName,
+          userId: form.staffname,
+          staffname: staffNameToSave,
+          clockin: "0",
+          clockout: "0",
+          shiftStatus: "0",
+          notes: form.notes || null,
+          createdAt: serverTimestamp(),
+        });
+      };
+
+      const isOvernight =
+        form.endTimeType === "time" && form.endTime && timeToMinutes(form.endTime) < timeToMinutes(form.startTime);
+
+      if (isOvernight) {
+        const [y, m, d] = form.date.split("-").map(Number);
+        const nextDate = new Date(y, m - 1, d + 1);
+        const nextDateStr = formatLocalDate(nextDate);
+
+        if (isEdit && editingShift?.id) {
+          const refDoc = doc(db, "shifts", editingShift.id);
+          await updateDoc(refDoc, {
+            date: form.date,
+            startTime: form.startTime,
+            endTime: "00:00",
+            siteName: form.siteName,
+            staffname: staffNameToSave,
+            userId: form.staffname,
+            clockin: form.clockin,
+            clockout: form.clockout,
+            breaks: form.breaks,
+            updatedAt: serverTimestamp(),
+          });
+
+          await createShiftDoc({
+            date: nextDateStr,
+            startTime: "00:00",
+            endTime: form.endTime,
+          });
+
+          await sendNotification(form.staffname, form.siteName, form.date);
+          await sendNotification(form.staffname, form.siteName, nextDateStr);
+          toast.success("Overnight shift split across two days");
+        } else {
+          await createShiftDoc({
+            date: form.date,
+            startTime: form.startTime,
+            endTime: "00:00",
+          });
+
+          await createShiftDoc({
+            date: nextDateStr,
+            startTime: "00:00",
+            endTime: form.endTime,
+          });
+
+          await sendNotification(form.staffname, form.siteName, form.date);
+          await sendNotification(form.staffname, form.siteName, nextDateStr);
+          toast.success("Overnight shift created and split across two days");
+        }
+      } else if (isEdit && editingShift?.id) {
         const refDoc = doc(db, "shifts", editingShift.id);
 
         await updateDoc(refDoc, {
@@ -228,7 +323,9 @@ export default function CreateShiftModal({ editingShift, onClose }) {
           siteName: form.siteName,
           staffname: staffNameToSave, // ✅ name
           userId: form.staffname, // ✅ id
-          //           notes: form.notes || null,
+          clockin: form.clockin,
+          clockout: form.clockout,
+          breaks: form.breaks,
           updatedAt: serverTimestamp(),
         });
 
@@ -248,7 +345,6 @@ export default function CreateShiftModal({ editingShift, onClose }) {
           createdAt: serverTimestamp(),
         });
 
-        // 🔥 CALL NOTIFICATION
         await sendNotification(form.staffname, form.siteName, form.date);
 
         toast.success("Shift created");
@@ -318,6 +414,57 @@ export default function CreateShiftModal({ editingShift, onClose }) {
               <div className="col-md-12 mb-3">
                 <textarea id="notes" className={`form-control ${styles.textareaBox}`} rows="3" value={form.notes} onChange={handleChange} />
               </div>
+
+              {isEdit && (
+                <div className="col-md-12 mb-3 border-top pt-3">
+                  <h6>Clock Times (admin correction)</h6>
+                  <div className="row">
+                    <div className="col-md-4 mb-2">
+                      <label className="form-label">Clock In</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={form.clockin === "0" ? "" : form.clockin}
+                        onChange={(e) => setForm((s) => ({ ...s, clockin: e.target.value || "0" }))}
+                      />
+                    </div>
+                    <div className="col-md-4 mb-2">
+                      <label className="form-label">Clock Out</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={form.clockout === "0" ? "" : form.clockout}
+                        onChange={(e) => setForm((s) => ({ ...s, clockout: e.target.value || "0" }))}
+                      />
+                    </div>
+                  </div>
+
+                  <h6 className="mt-3">Breaks</h6>
+                  {form.breaks.map((b, i) => (
+                    <div className="row align-items-center mb-2" key={i}>
+                      <div className="col-md-4">
+                        <input type="time" className="form-control" value={b.start} onChange={(e) => updateBreak(i, "start", e.target.value)} />
+                      </div>
+                      <div className="col-md-4">
+                        <input
+                          type="time"
+                          className="form-control"
+                          value={b.end === "0" ? "" : b.end}
+                          onChange={(e) => updateBreak(i, "end", e.target.value || "0")}
+                        />
+                      </div>
+                      <div className="col-md-2">
+                        <button type="button" className="btn btn-link text-danger" onClick={() => removeBreak(i)}>
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={addBreak}>
+                    + Add break
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

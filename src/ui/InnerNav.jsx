@@ -1,6 +1,6 @@
 import styles from "./InnerNav.module.css";
 import { NavLink } from "react-router-dom";
-import { FaClock, FaMapPin, FaUsers } from "react-icons/fa6";
+import { FaClock, FaFileInvoiceDollar, FaMapPin, FaUsers } from "react-icons/fa6";
 import { FaFileAlt } from "react-icons/fa";
 
 function InnerNav() {
@@ -19,6 +19,13 @@ function InnerNav() {
             <span>Shifts</span>
           </NavLink>
         </li>
+        <li>
+          <NavLink className={styles.myLink} to="venue-timesheet">
+            <FaFileInvoiceDollar />
+            <span>Venue Timesheet</span>
+          </NavLink>
+        </li>
+
         <li>
           <NavLink className={styles.myLink} to="site">
             <FaMapPin />

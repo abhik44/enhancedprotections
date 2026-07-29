@@ -8,6 +8,7 @@ import "./index.css";
 import Staff from "./pages/Staff";
 
 import Shifts from "./pages/Shifts";
+import VenueTimesheet from "./pages/VenueTimesheet";
 import Site from "./pages/Site";
 import SiteDocuments from "./pages/SiteDocuments";
 import SiteDocumentDetails from "./pages/SiteDocumentDetails";
@@ -29,6 +30,7 @@ function App() {
 
             {/* shift */}
             <Route path="shift" element={<Shifts />} />
+            <Route path="venue-timesheet" element={<VenueTimesheet />} />
 
             {/* site */}
             <Route path="site" element={<Site />} />

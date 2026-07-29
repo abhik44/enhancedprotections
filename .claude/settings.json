@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(firebase --version)",
+      "Bash(firebase --help)",
+      "Bash(firebase login:list)",
+      "Bash(gcloud auth *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(npx eslint *)",
+      "Bash(grep -n \"^  [A-Za-z].*\\(.*\\) {$\\\\|^  Widget \\\\|^  Future\\\\|_load\\(\\)\\\\|^}\" screens/home_screen.dart)",
+      "Bash(flutter --version)",
+      "Bash(flutter analyze *)"
+    ]
+  }
+}
