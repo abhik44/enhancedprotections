@@ -36,7 +36,12 @@ export function parseDate(value) {
 
 export function formatDate(value) {
   const d = parseDate(value);
-  return d ? d.toLocaleDateString() : "-";
+  if (!d) return "-";
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 export function isDateWithinRange(value, start, end) {

@@ -294,6 +294,19 @@ function Staff() {
 
                   <hr />
 
+                  <h4 className="fw-bold mb-3">Licence Details</h4>
+                  <p>
+                    <strong>RSA Number:</strong> {selectedEmployment.employmentDetails.rsaNumber}
+                  </p>
+                  <p>
+                    <strong>Security Licence Number:</strong> {selectedEmployment.employmentDetails.securityLicenceNumber}
+                  </p>
+                  <p>
+                    <strong>First Aid Number:</strong> {selectedEmployment.employmentDetails.firstAidNumber}
+                  </p>
+
+                  <hr />
+
                   <p className="text-muted">
                     <strong>Last Updated:</strong> {formatDateTime(selectedEmployment.employmentDetails.updatedAt)}
                   </p>

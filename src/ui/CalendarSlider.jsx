@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from "react";
 import styles from "./CalendarSlider.module.css";
 
-export default function CalendarSlider({ windowDays = 7, onChange }) {
+function getMonday(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+export default function CalendarSlider({ windowDays = 7, onChange, alignToMonday = false }) {
   const today = new Date();
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const initialStart = alignToMonday ? getMonday(startOfToday) : startOfToday;
 
-  const [startDate, setStartDate] = useState(startOfToday);
+  const [startDate, setStartDate] = useState(initialStart);
   const [anim, setAnim] = useState(null);
 
   function addDays(d, n) {

@@ -10,7 +10,8 @@
       "Bash(npx eslint *)",
       "Bash(grep -n \"^  [A-Za-z].*\\(.*\\) {$\\\\|^  Widget \\\\|^  Future\\\\|_load\\(\\)\\\\|^}\" screens/home_screen.dart)",
       "Bash(flutter --version)",
-      "Bash(flutter analyze *)"
+      "Bash(flutter analyze *)",
+      "Bash(node -e ' *)"
     ]
   }
 }
