@@ -74,3 +74,16 @@ export function isoDateKey(date) {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+// Standard ISO-8601 week number. `year` is the ISO week-year, which can
+// differ from the calendar year for dates in the last/first days of Dec/Jan.
+export function getIsoWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+
+  return { year: d.getUTCFullYear(), week };
+}

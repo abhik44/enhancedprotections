@@ -11,7 +11,8 @@
       "Bash(grep -n \"^  [A-Za-z].*\\(.*\\) {$\\\\|^  Widget \\\\|^  Future\\\\|_load\\(\\)\\\\|^}\" screens/home_screen.dart)",
       "Bash(flutter --version)",
       "Bash(flutter analyze *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(node -e 'const d=new Date\\(\\); console.log\\(d.toString\\(\\)\\); console.log\\(\"day of week:\", d.getDay\\(\\)\\);')"
     ]
   }
 }

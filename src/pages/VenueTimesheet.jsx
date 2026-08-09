@@ -6,7 +6,7 @@ import autoTable from "jspdf-autotable";
 import Spinner from "../ui/Spinner";
 import CalendarSlider from "../ui/CalendarSlider";
 import { formatToAmPm } from "../utils/formatTime";
-import { isDateWithinRange, addDays, isoDateKey } from "../utils/dateUtils";
+import { isDateWithinRange, addDays, isoDateKey, getIsoWeekNumber } from "../utils/dateUtils";
 import { calculateWorkedMinutes, formatMinutes, timeToMinutes } from "../utils/hours";
 
 // Static company details for the timesheet PDF footer.
@@ -378,10 +378,11 @@ function VenueTimesheet() {
       pdf.addImage(logoDataUrl, "PNG", rightX + 60, sigY + 15, 70, 53);
     }
 
+    const { year: isoYear, week: isoWeek } = getIsoWeekNumber(dateRange.start);
     pdf.setFont(undefined, "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(120, 120, 120);
-    pdf.text("Timesheet Version 1.0", rightX + 60, sigY + 80);
+    pdf.text(`Timesheet Version ${isoYear}.${String(isoWeek).padStart(2, "0")}`, rightX + 60, sigY + 80);
 
     const filename = `Timesheet_${selectedSite.replace(/\s+/g, "_")}_${isoDateKey(dateRange.start)}_to_${isoDateKey(dateRange.end)}.pdf`;
     pdf.save(filename);
