@@ -109,7 +109,7 @@ export default function CreateStaffModal({ editingStaff, onClose }) {
           firstname: staff.firstname,
           lastname: staff.lastname,
           email: staff.email,
-          password: staff.password,
+          ...(staff.password ? { password: staff.password } : {}),
           phone: staff.phone || null,
           profilePic: imageUrl || null,
           updatedAt: serverTimestamp(),

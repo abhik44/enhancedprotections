@@ -314,14 +314,13 @@ function VenueTimesheet() {
     pdf.text(disclaimerLines, pageWidth - 40, y + 42, { align: "right" });
     pdf.setTextColor(0, 0, 0);
 
+    // company info starts level with the summary stats (left side is empty there)
+    let leftY = y;
     y += 90;
 
-    // footer: company info (left), guard licence details (middle), signature block (right)
+    // footer: company info (left), signature block (right), guard licence details (below)
     const leftX = 40;
-    const midX = pageWidth / 2 - 60;
     const rightX = pageWidth - 200;
-    let leftY = y;
-    let midY = y;
 
     pdf.setFont(undefined, "bold");
     pdf.setFontSize(10);
@@ -348,20 +347,6 @@ function VenueTimesheet() {
     pdf.setFontSize(8);
     pdf.text(COMPANY_INFO.licenceLine, leftX, leftY);
 
-    // guard licence details
-    pdf.setFont(undefined, "bold");
-    pdf.setFontSize(10);
-    pdf.text("Guard Licence Details", midX, midY);
-    midY += 16;
-
-    pdf.setFont(undefined, "normal");
-    pdf.setFontSize(8);
-    guardRows.forEach((row) => {
-      const lic = (row.userId && licenceMap[row.userId]) || { rsaNumber: "-", securityLicenceNumber: "-", firstAidNumber: "-" };
-      pdf.text(`${row.staffname} — RSA: ${lic.rsaNumber} | Security Licence: ${lic.securityLicenceNumber} | First Aid: ${lic.firstAidNumber}`, midX, midY);
-      midY += 13;
-    });
-
     // signature block
     let sigY = y;
     pdf.setFont(undefined, "italic");
@@ -383,6 +368,32 @@ function VenueTimesheet() {
     pdf.setFontSize(8);
     pdf.setTextColor(120, 120, 120);
     pdf.text(`Timesheet Version ${isoYear}.${String(isoWeek).padStart(2, "0")}`, rightX + 60, sigY + 80);
+    pdf.setTextColor(0, 0, 0);
+
+    // guard licence details (below company info)
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let licY = leftY + 24;
+    const ensureSpace = (needed) => {
+      if (licY + needed > pageHeight - 30) {
+        pdf.addPage();
+        licY = 40;
+      }
+    };
+
+    ensureSpace(30);
+    pdf.setFont(undefined, "bold");
+    pdf.setFontSize(10);
+    pdf.text("Guard Licence Details", leftX, licY);
+    licY += 16;
+
+    pdf.setFont(undefined, "normal");
+    pdf.setFontSize(8);
+    guardRows.forEach((row) => {
+      ensureSpace(13);
+      const lic = (row.userId && licenceMap[row.userId]) || { rsaNumber: "-", securityLicenceNumber: "-", firstAidNumber: "-" };
+      pdf.text(`${row.staffname} — RSA: ${lic.rsaNumber} | Security Licence: ${lic.securityLicenceNumber} | First Aid: ${lic.firstAidNumber}`, leftX, licY);
+      licY += 13;
+    });
 
     const filename = `Timesheet_${selectedSite.replace(/\s+/g, "_")}_${isoDateKey(dateRange.start)}_to_${isoDateKey(dateRange.end)}.pdf`;
     pdf.save(filename);
