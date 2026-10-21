@@ -1,0 +1,264 @@
+
+
+.timesheetHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 16px;
+}
+
+.timesheetHeader h3 {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.timesheetControls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-width: 0;
+}
+
+.venueSelect {
+    min-width: 220px;
+    max-width: 100%;
+}
+
+.calendarControl {
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+.downloadButton {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Timesheet container */
+.timesheetContainer {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* Table scrolling */
+.timesheetTableWrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.timesheetTable {
+    min-width: 1100px;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.timesheetTable th,
+.timesheetTable td {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Summary statistics */
+.timesheetSummary {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin-top: 16px;
+    font-weight: 500;
+}
+
+
+
+@media (max-width: 768px) {
+
+    .timesheetHeader {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .timesheetHeader h3 {
+        font-size: 1.4rem;
+    }
+
+    .timesheetControls {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .venueSelect {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .calendarControl {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .downloadButton {
+        width: 100%;
+    }
+
+    /* Keep the table readable with horizontal scrolling */
+    .timesheetContainer {
+        padding: 8px !important;
+    }
+
+    .timesheetTable {
+        min-width: 1100px;
+        font-size: 0.8rem;
+    }
+
+    .timesheetTable th,
+    .timesheetTable td {
+        padding: 6px;
+    }
+
+    /* Stack summary items */
+    .timesheetSummary {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 8px;
+        font-size: 0.9rem;
+    }
+}
+
+
+/* ========================================
+   MOBILE CARDS (<768px replaces the table)
+   ======================================== */
+
+.mobileOnly {
+    display: none;
+}
+
+.cardList {
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.card {
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #dee2e6;
+    border-radius: 14px;
+    background: #fff;
+}
+
+/* Top row: guard name left, weekly total right */
+.cardTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.6rem;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.name {
+    margin: 0;
+    min-width: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #212529;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.totalBadge {
+    flex-shrink: 0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: #f1f3f5;
+    color: #212529;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* One line per worked day: date | start – finish | hours */
+.dayList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+}
+
+.dayRow {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 0.75rem;
+}
+
+.dayLabel {
+    color: #868e96;
+    white-space: nowrap;
+}
+
+.dayTimes {
+    color: #343a40;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.dayHours {
+    font-weight: 600;
+    color: #212529;
+    white-space: nowrap;
+}
+
+.noHours {
+    font-size: 0.85rem;
+    color: #868e96;
+}
+
+@media (max-width: 767.98px) {
+    .desktopOnly {
+        display: none;
+    }
+
+    .mobileOnly {
+        display: flex;
+    }
+}
+
+/* ========================================
+   SMALL MOBILE SCREENS
+   ======================================== */
+
+@media (max-width: 400px) {
+    .timesheetHeader h3 {
+        font-size: 1.25rem;
+    }
+
+    .timesheetContainer {
+        padding: 6px !important;
+    }
+
+    .timesheetTable {
+        font-size: 0.75rem;
+    }
+
+    .timesheetTable th,
+    .timesheetTable td {
+        padding: 5px;
+    }
+}

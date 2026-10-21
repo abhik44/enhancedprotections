@@ -12,7 +12,41 @@
       "Bash(flutter --version)",
       "Bash(flutter analyze *)",
       "Bash(node -e ' *)",
-      "Bash(node -e 'const d=new Date\\(\\); console.log\\(d.toString\\(\\)\\); console.log\\(\"day of week:\", d.getDay\\(\\)\\);')"
+      "Bash(node -e 'const d=new Date\\(\\); console.log\\(d.toString\\(\\)\\); console.log\\(\"day of week:\", d.getDay\\(\\)\\);')",
+      "Bash(find /Users/abhishek -maxdepth 5 -type d \\\\\\( -iname \"*flutter*app*\" -o -iname \"flutter-app\" -o -iname \"flutter_app\" \\\\\\) -not -path \"*/Library/*\" -not -path \"*/.pub-cache/*\" 2>/dev/null | head -20; echo ---; find /Users/abhishek/.Trash -maxdepth 2 -iname \"*flutter*\" 2>/dev/null | head)",
+      "Read(//Users/abhishek/**)",
+      "Read(//Users/abhishek/.Trash/**)",
+      "Bash(ls -lat /Users/abhishek/Documents/projects | head -30; echo ---; find /Users/abhishek -maxdepth 6 -name pubspec.yaml -not -path \"*/.pub-cache/*\" -not -path \"*/Library/*\" -not -path \"*/flutter/packages/*\" -not -path \"*/flutter/dev/*\" -not -path \"*/flutter/examples/*\" -not -path \"*/.symlinks/*\" -not -path \"*/ephemeral/*\" 2>/dev/null | head -40)",
+      "Read(//Users/abhishek/Documents/projects/**)",
+      "Read(//Users/abhishek/StudioProjects/enhancedprotections/**)",
+      "Read(//Users/abhishek/Documents/projects/enhancedprotectionsadmincla 2/**)",
+      "Bash(mdfind 'kMDItemFSName == \"flutter-app\"')",
+      "Bash(mdfind -name \"flutter-app\")",
+      "Read(//Users/abhishek/.claude/projects/**)",
+      "Bash(gh repo *)",
+      "Read(//Users/abhishek/StudioProjects/enhancedprotections/lib/screens/**)",
+      "Read(//Users/abhishek/StudioProjects/enhancedprotections/lib/**)",
+      "Bash(mdfind \"kMDItemFSName == 'app_update.dart'\")",
+      "Bash(mdfind \"kMDItemFSName == 'split_shift.dart'\")",
+      "Bash(mdfind \"kMDItemFSName == 'my_timesheet_screen.dart'\")",
+      "Bash(/Users/abhishek/downloads/flutter335/bin/flutter pub *)",
+      "Bash(/Users/abhishek/downloads/flutter335/bin/flutter analyze *)",
+      "Bash(python3 -I - ~/.claude/projects/-Users-abhishek-Documents-projects-enhancedprotectionsadmincla/881d8f31-50ed-4816-b001-8934522cfc85.jsonl)",
+      "Bash(grep -n \"^[A-Za-z].*\\(\\\\|^class\\\\|  [A-Za-z<>?,]* get \\\\|^  [A-Za-z].*;$\\\\|^  [A-Z][A-Za-z<>?]* [a-z].*\\(\" utils/split_shift.dart)",
+      "Bash([ -e $D ])",
+      "Bash(exit 1)",
+      "Bash(rsync -a --exclude .dart_tool --exclude build /private/tmp/claude-501/-Users-abhishek-Documents-projects-enhancedprotectionsadmincla/4e26b20d-c2e0-455f-8342-514cc8d64bb0/scratchpad/rebuilt/flutter-app/ /Users/abhishek/Documents/projects/enhancedprotectionsadmincla/flutter-app/)",
+      "Bash(git -C /Users/abhishek/Documents/projects/enhancedprotectionsadmincla status --short)",
+      "Bash(npx vite *)",
+      "Bash(git diff *)",
+      "Read(//Users/abhishek/Documents/projects/enhancedprotectionsadmincla 2/src/**)",
+      "Bash(diff -q src/pages/CreateShiftModal.jsx \"../enhancedprotectionsadmincla 2/src/pages/CreateShiftModal.jsx\" && echo SAME_AS_BEFORE; grep -rn \"send-notification\\\\|sendNotification\" src | grep -v \"^\\\\s*//\" | head)",
+      "Read(//Users/abhishek/Documents/projects/enhancedprotectionsadmincla 2/src/pages/**)",
+      "Bash(npm ci *)",
+      "Bash(grep -n \"prepareActiveShift\\\\|loadGroup\\\\|_group\\\\b\\\\|_group =\\\\|isEqualTo: \\\\|_todayKey\\\\|yesterday\\\\|DateFormat\\('yyyy-MM-dd'\\)\" flutter-app/lib/screens/home_screen.dart | head -40; echo ---; sed -n '/_load\\(\\) async {/,/^  }/p' flutter-app/lib/screens/home_screen.dart | head -70)"
+    ],
+    "additionalDirectories": [
+      "/Users/abhishek/Documents/projects/enhancedprotectionsadmincla/flutter-app/lib/screens"
     ]
   }
 }

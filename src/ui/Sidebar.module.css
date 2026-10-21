@@ -1,13 +1,9 @@
-.sidebar{
+.sidebar {
     display: flex;
     flex-direction: column;
     gap: 2rem;
- 
-    /* background-color: #273346; */
-    /* background-color: #2d3748; */
-    /* background-color: #1f2937; */
-    /* background-color: #778899; */
-    /* background-color: #6c7A89; */
+
+
     background-color: #596773;
     grid-row: 1/-1;
     padding: 1.5rem 0.5rem 3.2rem 0.5rem;
@@ -18,20 +14,130 @@
     scrollbar-width: none;
     border-right: 2px solid #f3f4f6;
 }
-.sidebarlogo{
+
+.sidebarlogo {
     width: 100px !important;
-   
-   
+
+
 }
-.sidebar::-webkit-scrollbar{
+
+.sidebar::-webkit-scrollbar {
     display: none;
 }
+
 .sidebar:has(:overflow)::-webkit-scrollbar,
-.sidebar:hover::-webkit-scrollbar{
+.sidebar:hover::-webkit-scrollbar {
     display: block;
     width: 6px;
 }
-.sidebar:hover::-webkit-scrollbar-thumb{
-    background-color: rgba(255 , 255 , 255 , 0.3);
+
+.sidebar:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
     border-radius: 10px;
+}
+
+
+
+
+
+/* Desktop logo container */
+.logoContainer {
+    text-align: center;
+}
+
+/* Hide mobile header on desktop */
+.mobileHeader {
+    display: none;
+}
+
+.menuButton {
+    display: none;
+}
+
+.overlay {
+    display: none;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .mobileHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        padding: 0 1rem;
+        background-color: #596773;
+        /* above the sidebar so the menu slides out from behind the bar */
+        z-index: 1003;
+        box-sizing: border-box;
+        grid-column: 1;
+    }
+
+    .mobileHeader img {
+        width: 80px;
+        max-height: 45px;
+        object-fit: contain;
+    }
+
+    .menuButton {
+        display: block;
+        border: none;
+        background: transparent;
+        color: #fff;
+        font-size: 1.8rem;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Drop-down panel: slides down from under the top bar */
+    .sidebar {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: calc(100dvh - 60px);
+        box-sizing: border-box;
+        padding: 1rem 0.5rem 1.5rem;
+        gap: 1.5rem;
+
+        transform: translateY(calc(-100% - 60px));
+        visibility: hidden;
+        transition: transform 0.3s ease, visibility 0.3s ease;
+
+        z-index: 1002;
+        grid-row: auto;
+        background-color: rgba(89, 103, 115, 0.97);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 0 0 14px 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .sidebarOpen {
+        transform: translateY(0);
+        visibility: visible;
+    }
+
+    .logoContainer {
+        display: none;
+    }
+
+    .overlay {
+        display: block;
+        position: fixed;
+        inset: 60px 0 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1000;
+    }
+
+    .innerNavDiv {
+        width: 100%;
+    }
 }

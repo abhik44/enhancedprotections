@@ -1,7 +1,7 @@
 import styles from "./CreateStaff.module.css";
 import { useEffect, useRef, useState } from "react";
 import { db } from "../firebase";
-import { collection, addDoc, getDocs, serverTimestamp, doc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, serverTimestamp, doc, updateDoc, getDoc, query, where, writeBatch, deleteField } from "firebase/firestore";
 import toast from "react-hot-toast";
 import { spanMinutes, sumBreakMinutes, timeToMinutes } from "../utils/hours";
 
@@ -30,18 +30,22 @@ export default function CreateShiftModal({ editingShift, onClose }) {
   const [saving, setSaving] = useState(false);
   const [staffOptions, setStaffOptions] = useState([]);
   const [siteOptions, setSiteOptions] = useState([]);
+  // both halves of a midnight-split shift ({ 1: shift, 2: shift }), or null
+  const [splitHalves, setSplitHalves] = useState(null);
+  const splitLoading = Boolean(editingShift?.splitGroupId) && !splitHalves;
 
   // 🔥 SEND NOTIFICATION
-  const sendNotification = async (staffId, siteName, date) => {
+  const sendNotification = async (staffId, siteName, date, title = "New Shift Assigned") => {
     try {
       const tokenDoc = await getDoc(doc(db, "firebasetokens", staffId));
+      const token = tokenDoc.exists() ? tokenDoc.data().token : null;
 
-      if (!tokenDoc.exists()) return;
+      if (!token) {
+        toast.error("Shift saved, but no notification sent: this staff member hasn't opened the app on their phone yet");
+        return;
+      }
 
-      const token = tokenDoc.data().token;
-      if (!token) return;
-
-      await fetch("/api/send-notification", {
+      const res = await fetch("/api/send-notification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,12 +54,21 @@ export default function CreateShiftModal({ editingShift, onClose }) {
           token,
           siteName,
           date,
+          title,
         }),
       });
+
+      if (!res.ok) {
+        const details = await res.json().catch(() => ({}));
+        console.error("Notification failed:", details);
+        toast.error("Shift saved, but the notification failed to send. Ask the staff member to open the app so their device re-registers.");
+        return;
+      }
 
       console.log("Notification sent");
     } catch (err) {
       console.error("Notification error:", err);
+      toast.error("Shift saved, but the notification failed to send");
     }
   };
 
@@ -199,16 +212,47 @@ export default function CreateShiftModal({ editingShift, onClose }) {
     onClose?.();
   };
 
+  // load the sibling half when editing a midnight-split shift
+  useEffect(() => {
+    if (!editingShift?.splitGroupId) {
+      setSplitHalves(null);
+      return;
+    }
+
+    let mounted = true;
+    (async () => {
+      try {
+        const snap = await getDocs(query(collection(db, "shifts"), where("splitGroupId", "==", editingShift.splitGroupId)));
+        const halves = {};
+        snap.docs.forEach((d) => {
+          const data = { id: d.id, ...d.data() };
+          halves[data.splitPart] = data;
+        });
+        if (mounted) setSplitHalves(halves[1] && halves[2] ? halves : null);
+      } catch (e) {
+        console.error("Split shift load error:", e);
+        if (mounted) setSplitHalves(null);
+      }
+    })();
+
+    return () => (mounted = false);
+  }, [editingShift]);
+
   useEffect(() => {
     if (!editingShift) return;
 
     const staffMatch = staffOptions.find((s) => s.name === editingShift.staffname);
 
+    // a split shift is edited as one overnight range (half 1 start -> half 2 end)
+    const first = splitHalves ? splitHalves[1] : editingShift;
+    const last = splitHalves ? splitHalves[2] : editingShift;
+
     setForm({
-      date: editingShift.date || "",
-      startTime: editingShift.startTime || defaultStart,
-      endTime: editingShift.endTime && editingShift.endTime !== "close" ? editingShift.endTime : defaultEnd,
-      endTimeType: editingShift.endTime === editingShift.startTime ? "close" : "time",
+      date: first.date || "",
+      startTime: first.startTime || defaultStart,
+      endTime: last.endTime && last.endTime !== "close" ? last.endTime : defaultEnd,
+      // an auto-split "Close" shift (staff app, clocked out after midnight) has half 2 = 00:00 - 00:00
+      endTimeType: last.endTime === (splitHalves ? last.startTime : first.startTime) ? "close" : "time",
       siteName: editingShift.siteName || "",
       staffname: staffMatch ? staffMatch.id : "", // ✅ IMPORTANT
       notes: editingShift.notes || "",
@@ -216,7 +260,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
       clockout: editingShift.clockout || "0",
       breaks: Array.isArray(editingShift.breaks) ? editingShift.breaks.map((b) => ({ ...b })) : [],
     });
-  }, [editingShift, staffOptions]);
+  }, [editingShift, staffOptions, splitHalves]);
 
   const addBreak = () => setForm((s) => ({ ...s, breaks: [...s.breaks, { start: "09:00", end: "0" }] }));
   const removeBreak = (i) => setForm((s) => ({ ...s, breaks: s.breaks.filter((_, idx) => idx !== i) }));
@@ -241,6 +285,23 @@ export default function CreateShiftModal({ editingShift, onClose }) {
 
       const endTimeToSave = form.endTimeType === "close" ? form.startTime : form.endTime || null;
 
+      // a "Close" shift that already ran past midnight stays split: half 1 to 00:00, half 2 00:00 - Close
+      const keepCloseSplit = Boolean(splitHalves) && form.endTimeType === "close";
+
+      // only tell staff about edits to when/where/who, not timesheet fixes (clock times, breaks, notes)
+      const origFirst = splitHalves ? splitHalves[1] : editingShift;
+      const origLast = splitHalves ? splitHalves[2] : editingShift;
+      const scheduleChanged =
+        isEdit &&
+        (form.date !== origFirst.date ||
+          form.startTime !== origFirst.startTime ||
+          (keepCloseSplit ? "00:00" : endTimeToSave) !== origLast.endTime ||
+          form.siteName !== editingShift.siteName ||
+          form.staffname !== editingShift.userId);
+      const notifyUpdate = async () => {
+        if (scheduleChanged) await sendNotification(form.staffname, form.siteName, form.date, "Shift Updated");
+      };
+
       const formatLocalDate = (value) => {
         const y = value.getFullYear();
         const m = String(value.getMonth() + 1).padStart(2, "0");
@@ -248,71 +309,95 @@ export default function CreateShiftModal({ editingShift, onClose }) {
         return `${y}-${m}-${d}`;
       };
 
-      const createShiftDoc = async ({ date, startTime, endTime }) => {
-        await addDoc(collection(db, "shifts"), {
-          date,
-          startTime,
-          endTime,
-          siteName: form.siteName,
-          userId: form.staffname,
-          staffname: staffNameToSave,
-          clockin: "0",
-          clockout: "0",
-          shiftStatus: "0",
-          notes: form.notes || null,
-          createdAt: serverTimestamp(),
-        });
+      const newShiftFields = {
+        siteName: form.siteName,
+        userId: form.staffname,
+        staffname: staffNameToSave,
+        clockin: "0",
+        clockout: "0",
+        shiftStatus: "0",
+        notes: form.notes || null,
+        createdAt: serverTimestamp(),
       };
 
       const isOvernight =
-        form.endTimeType === "time" && form.endTime && timeToMinutes(form.endTime) < timeToMinutes(form.startTime);
+        keepCloseSplit ||
+        (form.endTimeType === "time" &&
+          form.endTime &&
+          form.endTime !== "00:00" &&
+          timeToMinutes(form.endTime) < timeToMinutes(form.startTime));
+
+      // clock fields belong to the half that was opened for editing
+      const clockFields = {
+        clockin: form.clockin,
+        clockout: form.clockout,
+        breaks: form.breaks,
+      };
 
       if (isOvernight) {
         const [y, m, d] = form.date.split("-").map(Number);
         const nextDate = new Date(y, m - 1, d + 1);
         const nextDateStr = formatLocalDate(nextDate);
 
+        // both halves share splitGroupId (= half 1's id) so the staff app treats them as one shift
+        const batch = writeBatch(db);
+        const firstRef = isEdit && editingShift?.id ? doc(db, "shifts", splitHalves ? splitHalves[1].id : editingShift.id) : doc(collection(db, "shifts"));
+        const secondRef = splitHalves ? doc(db, "shifts", splitHalves[2].id) : doc(collection(db, "shifts"));
+
+        const firstHalf = { date: form.date, startTime: form.startTime, endTime: "00:00", splitGroupId: firstRef.id, splitPart: 1 };
+        const secondHalf = { date: nextDateStr, startTime: "00:00", endTime: keepCloseSplit ? "00:00" : form.endTime, splitGroupId: firstRef.id, splitPart: 2 };
+        const sharedFields = {
+          siteName: form.siteName,
+          staffname: staffNameToSave,
+          userId: form.staffname,
+          notes: form.notes || null,
+          updatedAt: serverTimestamp(),
+        };
+
         if (isEdit && editingShift?.id) {
-          const refDoc = doc(db, "shifts", editingShift.id);
-          await updateDoc(refDoc, {
-            date: form.date,
-            startTime: form.startTime,
-            endTime: "00:00",
-            siteName: form.siteName,
-            staffname: staffNameToSave,
-            userId: form.staffname,
-            clockin: form.clockin,
-            clockout: form.clockout,
-            breaks: form.breaks,
-            updatedAt: serverTimestamp(),
-          });
+          const editedPart = splitHalves && editingShift.id === splitHalves[2].id ? 2 : 1;
 
-          await createShiftDoc({
-            date: nextDateStr,
-            startTime: "00:00",
-            endTime: form.endTime,
-          });
+          batch.update(firstRef, { ...firstHalf, ...sharedFields, ...(editedPart === 1 ? clockFields : {}) });
 
-          await sendNotification(form.staffname, form.siteName, form.date);
-          await sendNotification(form.staffname, form.siteName, nextDateStr);
-          toast.success("Overnight shift split across two days");
+          if (splitHalves) {
+            batch.update(secondRef, { ...secondHalf, ...sharedFields, ...(editedPart === 2 ? clockFields : {}) });
+          } else {
+            batch.set(secondRef, { ...newShiftFields, ...secondHalf, shiftStatus: editingShift.shiftStatus || "0" });
+          }
+
+          await batch.commit();
+
+          await notifyUpdate();
+          toast.success("Overnight shift updated");
         } else {
-          await createShiftDoc({
-            date: form.date,
-            startTime: form.startTime,
-            endTime: "00:00",
-          });
-
-          await createShiftDoc({
-            date: nextDateStr,
-            startTime: "00:00",
-            endTime: form.endTime,
-          });
+          batch.set(firstRef, { ...newShiftFields, ...firstHalf });
+          batch.set(secondRef, { ...newShiftFields, ...secondHalf });
+          await batch.commit();
 
           await sendNotification(form.staffname, form.siteName, form.date);
-          await sendNotification(form.staffname, form.siteName, nextDateStr);
           toast.success("Overnight shift created and split across two days");
         }
+      } else if (isEdit && splitHalves) {
+        // a split shift no longer crosses midnight: keep half 1, drop half 2
+        const batch = writeBatch(db);
+        batch.update(doc(db, "shifts", splitHalves[1].id), {
+          date: form.date,
+          startTime: form.startTime,
+          endTime: endTimeToSave,
+          siteName: form.siteName,
+          staffname: staffNameToSave,
+          userId: form.staffname,
+          notes: form.notes || null,
+          ...(editingShift.id === splitHalves[1].id ? clockFields : {}),
+          splitGroupId: deleteField(),
+          splitPart: deleteField(),
+          updatedAt: serverTimestamp(),
+        });
+        batch.delete(doc(db, "shifts", splitHalves[2].id));
+        await batch.commit();
+
+        await notifyUpdate();
+        toast.success("Shift updated");
       } else if (isEdit && editingShift?.id) {
         const refDoc = doc(db, "shifts", editingShift.id);
 
@@ -329,6 +414,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
           updatedAt: serverTimestamp(),
         });
 
+        await notifyUpdate();
         toast.success("Shift updated");
       } else {
         await addDoc(collection(db, "shifts"), {
@@ -473,7 +559,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
               Close
             </button>
 
-            <button className="btn btn-danger custom-red-bg text-white" onClick={handleSave} disabled={saving}>
+            <button className="btn btn-danger custom-red-bg text-white" onClick={handleSave} disabled={saving || splitLoading}>
               {saving ? "Saving..." : isEdit ? "Update" : "Save"}
             </button>
           </div>

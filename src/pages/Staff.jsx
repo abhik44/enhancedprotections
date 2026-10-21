@@ -3,12 +3,12 @@ import Search from "../ui/Search";
 import { db } from "../firebase";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import Spinner from "../ui/Spinner";
-import { HiPencilSquare } from "react-icons/hi2";
+import { HiPencilSquare, HiTrash, HiUser } from "react-icons/hi2";
 import CreateStaffModal from "./CreateStaffModal";
 import { HiEye } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import { deleteDoc, doc } from "firebase/firestore";
-import { HiTrash } from "react-icons/hi2";
+import styles from "./CreateStaff.module.css";
 
 function Staff() {
   const navigate = useNavigate();
@@ -101,13 +101,15 @@ function Staff() {
   };
   const handleOpenEdit = (staff) => setEditingStaff(staff);
 
+  const getInitials = (staff) => `${(staff.firstname || "")[0] || ""}${(staff.lastname || "")[0] || ""}`.toUpperCase() || "?";
+
   return (
     <>
-      <div className="d-flex justify-content-between gap-5 align-items-center mb-3">
-        <h3 className="text-4a">Staffs</h3>
+      <div className={styles.header}>
+        <h3 className="text-4a mb-0">Staffs</h3>
 
-        <div className="d-flex gap-4 justify-content-end">
-          <div style={{ width: "500px" }}>
+        <div className={styles.headerActions}>
+          <div className={styles.searchWrap}>
             <Search value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search by name, email, phone" />
           </div>
 
@@ -119,89 +121,156 @@ function Staff() {
         </div>
       </div>
 
-      {/* Staff Table */}
-      <div className="staffTable border border-2 rounded-4 p-3">
-        {loading ? (
+      {loading ? (
+        <div className="staffTable border border-2 rounded-4 p-3">
           <div className="text-custom-red text-center d-flex align-items-center justify-content-center gap-2">
             <Spinner colorSpinner="text-custom-red" />
             <span>Loading staff...</span>
           </div>
-        ) : filteredStaffs.length === 0 ? (
+        </div>
+      ) : filteredStaffs.length === 0 ? (
+        <div className="staffTable border border-2 rounded-4 p-3">
           <div className="text-custom-red fw-bold text-center mb-0">No Staff Found :(</div>
-        ) : (
-          <table className="table">
-            <thead className="table-light">
-              <tr>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Email</th>
-                <th>Password</th>
-                <th>Phone</th>
-                <th>Profile</th>
-                <th>Edit</th>
-                <th>View Document</th>
-                <th>Employment Details</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
+        </div>
+      ) : (
+        <>
+          {/* ================= Desktop / tablet: Table ================= */}
+          <div className={`${styles.desktopOnly} staffTable border border-2 rounded-4 p-3`}>
+            <table className="table">
+              <thead className="table-light">
+                <tr>
+                  <th>First Name</th>
+                  <th>Last Name</th>
+                  <th>Email</th>
+                  <th>Password</th>
+                  <th>Phone</th>
+                  <th>Profile</th>
+                  <th>Edit</th>
+                  <th>View Document</th>
+                  <th>Employment Details</th>
+                  <th>Delete</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {filteredStaffs.map((staff) => (
-                <tr key={staff.id}>
-                  <td>{staff.firstname || "-"}</td>
-                  <td>{staff.lastname || "-"}</td>
-                  <td>{staff.email || "-"}</td>
-                  <td>{staff.password || "-"}</td>
+              <tbody>
+                {filteredStaffs.map((staff) => (
+                  <tr key={staff.id}>
+                    <td>{staff.firstname || "-"}</td>
+                    <td>{staff.lastname || "-"}</td>
+                    <td>{staff.email || "-"}</td>
+                    <td>{staff.password || "-"}</td>
 
-                  <td>{staff.phone || "-"}</td>
+                    <td>{staff.phone || "-"}</td>
 
-                  <td className="ps-3">
-                    {staff.profilePic && (
-                      <img
-                        src={staff.profilePic}
-                        alt="profile"
-                        width="35"
-                        height="35"
-                        className="rounded-pill"
-                        style={{ objectFit: "cover" }}
-                        onError={(e) => (e.currentTarget.style.display = "none")}
-                      />
+                    <td className="ps-3">
+                      {staff.profilePic && (
+                        <img
+                          src={staff.profilePic}
+                          alt="profile"
+                          width="35"
+                          height="35"
+                          className="rounded-pill"
+                          style={{ objectFit: "cover" }}
+                          onError={(e) => (e.currentTarget.style.display = "none")}
+                        />
+                      )}
+                    </td>
+
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-link p-0 border-0 text-black"
+                        data-bs-toggle="modal"
+                        data-bs-target="#createStaff"
+                        onClick={() => handleOpenEdit(staff)}
+                      >
+                        <HiPencilSquare />
+                      </button>
+                    </td>
+                    <td className="ps-5 ">
+                      <button type="button" className="btn btn-link p-0 border-0 text-black" onClick={() => navigate("viewStaffSignedDocuments", { state: { staffId: staff.id } })}>
+                        <HiEye />
+                      </button>
+                    </td>
+                    <td>
+                      <button className="btn btn-link p-0 border-0 text-black" data-bs-toggle="modal" data-bs-target="#employmentModal" onClick={() => setSelectedEmployment(staff)}>
+                        <HiEye />
+                      </button>
+                    </td>
+
+                    <td>
+                      <button className="btn btn-link text-danger  p-0 border-0" onClick={() => handleDelete(staff.id)}>
+                        <HiTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ================= Mobile: Cards ================= */}
+          <div className={`${styles.mobileOnly} ${styles.cardList}`}>
+            {filteredStaffs.map((staff) => (
+              <div className={styles.card} key={staff.id}>
+                {/* Top row: avatar + name on the left, action icons on the right */}
+                <div className={styles.cardTop}>
+                  <div className={styles.identity}>
+                    {staff.profilePic ? (
+                      <img src={staff.profilePic} alt="profile" className={styles.avatar} onError={(e) => (e.currentTarget.style.display = "none")} />
+                    ) : (
+                      <div className={styles.avatarFallback}>{getInitials(staff)}</div>
                     )}
-                  </td>
+                    <h6 className={styles.name}>{`${staff.firstname || ""} ${staff.lastname || ""}`.trim() || "-"}</h6>
+                  </div>
 
-                  <td>
-                    <button
-                      type="button"
-                      className="btn btn-link p-0 border-0 text-black"
-                      data-bs-toggle="modal"
-                      data-bs-target="#createStaff"
-                      onClick={() => handleOpenEdit(staff)}
-                    >
+                  <div className={styles.cardActions}>
+                    <button type="button" className={styles.iconBtn} title="Edit" aria-label="Edit staff" data-bs-toggle="modal" data-bs-target="#createStaff" onClick={() => handleOpenEdit(staff)}>
                       <HiPencilSquare />
                     </button>
-                  </td>
-                  <td className="ps-5 ">
-                    <button type="button" className="btn btn-link p-0 border-0 text-black" onClick={() => navigate("viewStaffSignedDocuments", { state: { staffId: staff.id } })}>
-                      <HiEye />
-                    </button>
-                  </td>
-                  <td>
-                    <button className="btn btn-link p-0 border-0 text-black" data-bs-toggle="modal" data-bs-target="#employmentModal" onClick={() => setSelectedEmployment(staff)}>
-                      <HiEye />
-                    </button>
-                  </td>
 
-                  <td>
-                    <button className="btn btn-link text-danger  p-0 border-0" onClick={() => handleDelete(staff.id)}>
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      title="View documents"
+                      aria-label="View signed documents"
+                      onClick={() => navigate("viewStaffSignedDocuments", { state: { staffId: staff.id } })}
+                    >
+                      <HiEye />
+                    </button>
+
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      title="Employment details"
+                      aria-label="View employment details"
+                      data-bs-toggle="modal"
+                      data-bs-target="#employmentModal"
+                      onClick={() => setSelectedEmployment(staff)}
+                    >
+                      <HiUser />
+                    </button>
+
+                    <button type="button" className={styles.iconBtnDanger} title="Delete" aria-label="Delete staff" onClick={() => handleDelete(staff.id)}>
                       <HiTrash />
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                  </div>
+                </div>
+
+                {/* Details: full width under the header row */}
+                <dl className={styles.details}>
+                  <dt>Email</dt>
+                  <dd>{staff.email || "-"}</dd>
+                  <dt>Phone</dt>
+                  <dd>{staff.phone || "-"}</dd>
+                  <dt>Password</dt>
+                  <dd>{staff.password || "-"}</dd>
+                </dl>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="modal fade" id="employmentModal" tabIndex="-1">
         <div className="modal-dialog modal-lg">

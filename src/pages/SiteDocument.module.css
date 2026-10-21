@@ -1,0 +1,174 @@
+
+/* Page heading and search */
+.siteDocumentsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.siteDocumentsSearch {
+    width: 500px;
+    max-width: 100%;
+}
+
+/* Table wrapper */
+.siteDocumentsTable {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.siteDocumentsTable table {
+    width: 100%;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .siteDocumentsHeader {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .siteDocumentsHeader h3 {
+        font-size: 1.4rem;
+    }
+
+    .siteDocumentsSearch {
+        width: 100%;
+    }
+
+    .siteDocumentsTable {
+        padding: 0.5rem !important;
+        border-width: 1px !important;
+        border-radius: 0.75rem !important;
+    }
+
+    .siteDocumentsTable table {
+        min-width: 500px;
+        font-size: 0.85rem;
+        margin-bottom: 0;
+    }
+
+    .siteDocumentsTable th,
+    .siteDocumentsTable td {
+        padding: 0.65rem;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 400px) {
+    .siteDocumentsHeader h3 {
+        font-size: 1.25rem;
+    }
+
+    .siteDocumentsTable table {
+        font-size: 0.8rem;
+    }
+}
+
+/* ==============================
+   MOBILE CARDS (<768px replaces the table)
+============================== */
+
+.mobileOnly {
+    display: none;
+}
+
+.cardList {
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.card {
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #dee2e6;
+    border-radius: 14px;
+    background: #fff;
+}
+
+/* Top row: site name left, icons right */
+.cardTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.6rem;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.name {
+    margin: 0;
+    min-width: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #212529;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 0.9rem;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.details dt {
+    font-weight: 400;
+    color: #868e96;
+}
+
+.details dd {
+    margin: 0;
+    min-width: 0;
+    color: #343a40;
+    overflow-wrap: anywhere;
+}
+
+.cardActions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.iconBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #000;
+    font-size: 1.1rem;
+}
+
+.iconBtn:hover,
+.iconBtn:focus-visible {
+    background: #f1f3f5;
+}
+
+.iconBtnDanger {
+    composes: iconBtn;
+    color: #dc3545;
+}
+
+@media (max-width: 767.98px) {
+    .desktopOnly {
+        display: none;
+    }
+
+    .mobileOnly {
+        display: flex;
+    }
+}

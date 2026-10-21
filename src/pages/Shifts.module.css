@@ -1,0 +1,395 @@
+
+/* Main page */
+.shiftsPage {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* ==============================
+   PAGE HEADING
+============================== */
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 16px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* Search and buttons */
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.searchWrapper {
+  flex: 1 1 200px;
+  width: 240px;
+  min-width: 150px;
+  max-width: 280px;
+}
+
+.searchWrapper :global(input) {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.toolbarButton {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ==============================
+   MAIN SHIFTS CONTAINER
+============================== */
+
+.shiftsContainer {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 10px;
+  background: var(--bs-body-bg, #fff);
+  box-sizing: border-box;
+}
+
+/* ==============================
+   CALENDAR
+============================== */
+
+.calendarWrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+
+/* ==============================
+   RESPONSIVE TABLE
+============================== */
+
+.tableWrapper {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shiftsTable {
+  width: 100%;
+  min-width: 1100px;
+  margin-bottom: 0;
+  vertical-align: middle;
+  border-collapse: collapse;
+}
+
+.shiftsTable th,
+.shiftsTable td {
+  padding: 12px 10px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Empty state */
+.emptyState {
+  padding: 24px 12px;
+  text-align: center;
+}
+
+/* ==============================
+   TABLET
+============================== */
+
+@media (max-width: 992px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .headerActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .searchWrapper {
+    flex: 1 1 200px;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .toolbarButton {
+    max-width: 100%;
+  }
+
+  .shiftsContainer {
+    padding: 12px;
+  }
+
+  .calendarWrapper {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .tableWrapper {
+    overflow-x: auto;
+  }
+
+  .shiftsTable {
+    min-width: 1100px;
+  }
+}
+
+/* ==============================
+   MOBILE
+============================== */
+
+@media (max-width: 576px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .pageTitle {
+    font-size: 1.35rem;
+  }
+
+  .headerActions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .searchWrapper {
+    display: block;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    flex: none;
+  }
+
+  .searchWrapper :global(input) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .toolbarButton {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-height: 42px;
+    flex: none;
+    white-space: normal;
+    box-sizing: border-box;
+  }
+
+  .shiftsContainer {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .calendarWrapper {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    margin-bottom: 12px;
+  }
+
+  .tableWrapper {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .shiftsTable {
+    width: max-content;
+    min-width: 1100px;
+    margin-bottom: 0;
+  }
+
+  .shiftsTable th,
+  .shiftsTable td {
+    padding: 10px 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .emptyState {
+    padding: 20px 8px;
+  }
+}
+
+/* ==============================
+   MOBILE CARDS (<768px replaces the table)
+============================== */
+
+.mobileOnly {
+  display: none;
+}
+
+.cardList {
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #dee2e6;
+  border-radius: 14px;
+  background: #fff;
+}
+
+/* Top row: status left, icons right */
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.6rem;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.statusAccepted {
+  background: #e6f4ea;
+  color: #198754;
+}
+
+.statusRejected {
+  background: #fdecea;
+  color: #dc3545;
+}
+
+.statusPending {
+  background: #fff4e0;
+  color: #b7791f;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.9rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.details dt {
+  font-weight: 400;
+  color: #868e96;
+}
+
+.details dd {
+  margin: 0;
+  min-width: 0;
+  color: #343a40;
+  overflow-wrap: anywhere;
+}
+
+.details .strong {
+  font-weight: 600;
+  color: #212529;
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #000;
+  font-size: 1.1rem;
+}
+
+.iconBtn:hover,
+.iconBtn:focus-visible {
+  background: #f1f3f5;
+}
+
+.iconBtnDanger {
+  composes: iconBtn;
+  color: #dc3545;
+}
+
+@media (max-width: 767.98px) {
+  .desktopOnly {
+    display: none;
+  }
+
+  .mobileOnly {
+    display: flex;
+  }
+}
+
+/* ==============================
+   VERY SMALL MOBILE
+============================== */
+
+@media (max-width: 360px) {
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+
+  .shiftsContainer {
+    padding: 6px;
+  }
+
+  .shiftsTable {
+    min-width: 1100px;
+  }
+
+  .shiftsTable th,
+  .shiftsTable td {
+    padding: 9px 7px;
+    font-size: 12px;
+  }
+}

@@ -30,3 +30,28 @@ background: transparent;
     border-radius: 10px;
 
 }
+
+/* Mobile layout */
+@media (max-width: 768px) {
+    .appLayout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: 60px auto minmax(0, 1fr);
+       
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .main {
+        grid-column: 1;
+        grid-row: 3;
+        min-width: 0;
+        padding: 1rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .myContainer {
+        width: 100%;
+        min-width: 0;
+    }
+}

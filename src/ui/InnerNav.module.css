@@ -55,3 +55,43 @@
     border-radius: 10px;
 
 }
+/* Mobile navigation styling */
+@media (max-width: 768px) {
+    .mynavlist {
+        gap: 0.5rem;
+    }
+
+    .myLink:link,
+    .myLink:visited,
+    .myLink {
+        /* color: #465460; */
+        color: #ffffff;
+        padding: 0.8rem 0.9rem;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+
+    .myLink svg {
+        /* color: #596773; */
+          color: #ffffff;
+    }
+
+    /* Hover and active link */
+    .myLink:hover,
+    .myLink:active,
+    .myLink.active:link,
+    .myLink.active:visited,
+    .myLink:global(.active) {
+     color: #ffffff;
+    background-color: #ce0e31;
+    border-radius: 10px;
+    }
+
+    .myLink:hover svg,
+    .myLink:active svg,
+    .myLink.active:link svg,
+    .myLink.active:visited svg,
+    .myLink:global(.active) svg {
+        color: #ffffff;
+    }
+}

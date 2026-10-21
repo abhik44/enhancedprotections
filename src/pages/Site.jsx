@@ -7,6 +7,7 @@ import Spinner from "../ui/Spinner";
 import { HiPencilSquare } from "react-icons/hi2";
 import { deleteDoc, doc } from "firebase/firestore";
 import { HiTrash } from "react-icons/hi2";
+import styles from "./Site.module.css";
 
 function Site() {
   const [sites, setSites] = useState([]);
@@ -70,73 +71,153 @@ function Site() {
     setEditingSite(site);
   };
 
-  return (
-    <>
-      <div className="d-flex justify-content-between gap-5 align">
-        <h3 className="text-4a">Sites</h3>
+  
+return (
+  <>
+    {/* Page heading and actions */}
+    <div className={`${styles.sitePageHeader} mb-3`}>
+      <h3 className="text-4a mb-0">Sites</h3>
 
-        <div className="d-flex justify-content-end gap-4">
-          {/* Search bar */}
-          <div style={{ width: "500px" }}>
-            <Search value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search site name.." />
-          </div>
+      <div className={styles.siteActions}>
+        {/* Search bar */}
+        <div className={styles.siteSearch}>
+          <Search
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search site name.."
+          />
+        </div>
 
-          {/* Button for Create Site Modal */}
-          <div>
-            <button type="button" className="btn custom-red-bg text-white fw-medium" data-bs-toggle="modal" data-bs-target="#createSite" onClick={handleOpenCreate}>
-              + Create Site
-            </button>
+        {/* Create Site button */}
+        <button
+          type="button"
+          className={`btn custom-red-bg text-white fw-medium ${styles.createSiteBtn}`}
+          data-bs-toggle="modal"
+          data-bs-target="#createSite"
+          onClick={handleOpenCreate}
+        >
+          + Create Site
+        </button>
+      </div>
+    </div>
 
-            <CreateSiteModal editingSite={editingSite} onClose={() => setEditingSite(null)} />
-          </div>
+    {/* Create Site Modal */}
+    <CreateSiteModal
+      editingSite={editingSite}
+      onClose={() => setEditingSite(null)}
+    />
+
+    {loading ? (
+      <div className={`${styles.siteTable} border border-2 rounded-4 p-3`}>
+        <div className="text-custom-red text-center d-flex align-items-center justify-content-center gap-2">
+          <Spinner colorSpinner="text-custom-red" />
+          <span>Loading sites...</span>
         </div>
       </div>
-
-      {/* Sites table */}
-      <div className="siteTable border border-2 rounded-4 p-3">
-        {loading ? (
-          <div className="text-custom-red text-center d-flex align-items-center justify-content-center gap-2">
-            <Spinner colorSpinner="text-custom-red" />
-            <span>Loading sites...</span>
-          </div>
-        ) : filteredSites.length === 0 ? (
-          <div className="alert text-custom-red fw-bold text-center  mb-0">No Sites Found :(</div>
-        ) : (
-          <table className="table">
-            <thead className="table-light">
-              <tr>
-                <th>Site Name</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Edit</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredSites.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.siteName ?? "-"}</td>
-                  <td>{s.latitude ?? "-"}</td>
-                  <td>{s.longitude ?? "-"}</td>
-                  <td className="ps-3">
-                    <button type="button" className="btn btn-link text-black p-0 border-0" data-bs-toggle="modal" data-bs-target="#createSite" onClick={() => handleOpenEdit(s)}>
-                      <HiPencilSquare />
-                    </button>
-                  </td>
-                  <td>
-                    <button className="btn btn-link text-danger  p-0 border-0" onClick={() => handleDeleteSite(s.id)}>
-                      <HiTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+    ) : filteredSites.length === 0 ? (
+      <div className={`${styles.siteTable} border border-2 rounded-4 p-3`}>
+        <div className="alert text-custom-red fw-bold text-center mb-0">
+          No Sites Found :(
+        </div>
       </div>
-    </>
-  );
+    ) : (
+      <>
+        {/* ================= Mobile: Cards ================= */}
+        <div className={`${styles.mobileOnly} ${styles.cardList}`}>
+          {filteredSites.map((s) => (
+            <div className={styles.card} key={s.id}>
+              {/* Top row: site name on the left, action icons on the right */}
+              <div className={styles.cardTop}>
+                <h6 className={styles.name}>{s.siteName ?? "-"}</h6>
+
+                <div className={styles.cardActions}>
+                  <button
+                    type="button"
+                    className={styles.iconBtn}
+                    title="Edit"
+                    aria-label={`Edit ${s.siteName || "site"}`}
+                    data-bs-toggle="modal"
+                    data-bs-target="#createSite"
+                    onClick={() => handleOpenEdit(s)}
+                  >
+                    <HiPencilSquare />
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.iconBtnDanger}
+                    title="Delete"
+                    aria-label={`Delete ${s.siteName || "site"}`}
+                    onClick={() => handleDeleteSite(s.id)}
+                  >
+                    <HiTrash />
+                  </button>
+                </div>
+              </div>
+
+              <dl className={styles.details}>
+                <dt>Latitude</dt>
+                <dd>{s.latitude ?? "-"}</dd>
+                <dt>Longitude</dt>
+                <dd>{s.longitude ?? "-"}</dd>
+              </dl>
+            </div>
+          ))}
+        </div>
+
+        {/* ================= Desktop / tablet: Table ================= */}
+        <div className={`${styles.desktopOnly} ${styles.siteTable} border border-2 rounded-4 p-3`}>
+        <table className="table align-middle mb-0">
+          <thead className="table-light">
+            <tr>
+              <th>Site Name</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Edit</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredSites.map((s) => (
+              <tr key={s.id}>
+                <td>{s.siteName ?? "-"}</td>
+                <td>{s.latitude ?? "-"}</td>
+                <td>{s.longitude ?? "-"}</td>
+
+                <td>
+                  <button
+                    type="button"
+                    className="btn btn-link text-black p-0 border-0"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createSite"
+                    onClick={() => handleOpenEdit(s)}
+                    aria-label={`Edit ${s.siteName || "site"}`}
+                  >
+                    <HiPencilSquare />
+                  </button>
+                </td>
+
+                <td>
+                  <button
+                    type="button"
+                    className="btn btn-link text-danger p-0 border-0"
+                    onClick={() => handleDeleteSite(s.id)}
+                    aria-label={`Delete ${s.siteName || "site"}`}
+                  >
+                    <HiTrash />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
+      </>
+    )}
+  </>
+);
+
 }
 
 export default Site;

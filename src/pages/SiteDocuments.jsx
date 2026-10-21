@@ -5,6 +5,7 @@ import { db } from "../firebase";
 import { collection, onSnapshot } from "firebase/firestore";
 import { HiEye } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
+import styles from "./SiteDocument.module.css";
 
 function SiteDocuments() {
   const [sites, setSites] = useState([]);
@@ -48,56 +49,110 @@ function SiteDocuments() {
     return sites.filter((s) => (s.siteName || "").toLowerCase().includes(q));
   }, [sites, searchTerm]);
 
-  return (
-    <>
-      <div className="d-flex justify-content-between gap-5 align mb-3">
-        <h3 className="text-4a">Site Documents</h3>
+ 
+return (
+  <>
+    {/* Page heading and search */}
+    <div className={`${styles.siteDocumentsHeader} mb-3`}>
+      <h3 className="text-4a mb-0">Site Documents</h3>
 
-        <div style={{ width: "500px" }}>
-          <Search value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search site name..." />
+      <div className={styles.siteDocumentsSearch}>
+        <Search
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search site name..."
+        />
+      </div>
+    </div>
+
+    {loading ? (
+      <div className={`${styles.siteDocumentsTable} border border-2 rounded-4 p-3`}>
+        <div className="text-custom-red text-center d-flex align-items-center justify-content-center gap-2">
+          <Spinner colorSpinner="text-custom-red" />
+          <span>Loading sites...</span>
         </div>
       </div>
-
-      {/* Table */}
-      <div className="border border-2 rounded-4 p-3">
-        {loading ? (
-          <div className="text-custom-red text-center d-flex align-items-center justify-content-center gap-2">
-            <Spinner colorSpinner="text-custom-red" />
-            <span>Loading sites...</span>
-          </div>
-        ) : filteredSites.length === 0 ? (
-          <div className="alert text-custom-red fw-bold text-center mb-0">No Sites Found :(</div>
-        ) : (
-          <table className="table">
-            <thead className="table-light">
-              <tr>
-                <th>Site Name</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>View Documents</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredSites.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.siteName ?? "-"}</td>
-                  <td>{s.latitude ?? "-"}</td>
-                  <td>{s.longitude ?? "-"}</td>
-
-                  <td className="ps-3">
-                    <button type="button" className="btn btn-link text-black p-0 border-0" title="View site documents" onClick={() => navigate(`/app/site-documents/${s.id}`)}>
-                      <HiEye />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+    ) : filteredSites.length === 0 ? (
+      <div className={`${styles.siteDocumentsTable} border border-2 rounded-4 p-3`}>
+        <div className="alert text-custom-red fw-bold text-center mb-0">
+          No Sites Found :(
+        </div>
       </div>
-    </>
-  );
+    ) : (
+      <>
+        {/* ================= Mobile: Cards ================= */}
+        <div className={`${styles.mobileOnly} ${styles.cardList}`}>
+          {filteredSites.map((s) => (
+            <div className={styles.card} key={s.id}>
+              {/* Top row: site name on the left, action icon on the right */}
+              <div className={styles.cardTop}>
+                <h6 className={styles.name}>{s.siteName ?? "-"}</h6>
+
+                <div className={styles.cardActions}>
+                  <button
+                    type="button"
+                    className={styles.iconBtn}
+                    title="View site documents"
+                    aria-label={`View documents for ${s.siteName || "site"}`}
+                    onClick={() => navigate(`/app/site-documents/${s.id}`)}
+                  >
+                    <HiEye />
+                  </button>
+                </div>
+              </div>
+
+              <dl className={styles.details}>
+                <dt>Latitude</dt>
+                <dd>{s.latitude ?? "-"}</dd>
+                <dt>Longitude</dt>
+                <dd>{s.longitude ?? "-"}</dd>
+              </dl>
+            </div>
+          ))}
+        </div>
+
+        {/* ================= Desktop / tablet: Table ================= */}
+        <div className={`${styles.desktopOnly} ${styles.siteDocumentsTable} border border-2 rounded-4 p-3`}>
+        <table className="table align-middle mb-0">
+          <thead className="table-light">
+            <tr>
+              <th>Site Name</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>View Documents</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredSites.map((s) => (
+              <tr key={s.id}>
+                <td>{s.siteName ?? "-"}</td>
+                <td>{s.latitude ?? "-"}</td>
+                <td>{s.longitude ?? "-"}</td>
+
+                <td>
+                  <button
+                    type="button"
+                    className="btn btn-link text-black p-0 border-0"
+                    title="View site documents"
+                    aria-label={`View documents for ${s.siteName || "site"}`}
+                    onClick={() =>
+                      navigate(`/app/site-documents/${s.id}`)
+                    }
+                  >
+                    <HiEye />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
+      </>
+    )}
+  </>
+);
+
 }
 
 export default SiteDocuments;

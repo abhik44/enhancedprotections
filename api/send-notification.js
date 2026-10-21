@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { token, siteName, date } = req.body;
+    const { token, siteName, date, title = "New Shift Assigned" } = req.body;
 
     if (!token) {
       return res.status(400).json({ error: "Missing token" });
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
         message: {
           token: token,
           notification: {
-            title: "New Shift Assigned",
+            title,
             body: `Site: ${siteName} | Date: ${date}`,
           },
         },
@@ -69,7 +69,8 @@ export default async function handler(req, res) {
 
     const fcmData = await fcmRes.json();
 
-    return res.status(200).json(fcmData);
+    // pass FCM failures through (e.g. 404 UNREGISTERED = stale device token) so the admin can see them
+    return res.status(fcmRes.ok ? 200 : fcmRes.status).json(fcmData);
   } catch (error) {
     console.error("FCM ERROR:", error);
     return res.status(500).json({

@@ -8,6 +8,7 @@ import CalendarSlider from "../ui/CalendarSlider";
 import { formatToAmPm } from "../utils/formatTime";
 import { isDateWithinRange, addDays, isoDateKey, getIsoWeekNumber } from "../utils/dateUtils";
 import { calculateWorkedMinutes, formatMinutes, timeToMinutes } from "../utils/hours";
+import styles from "./VenueTimesheet.module.css";
 
 // Static company details for the timesheet PDF footer.
 const COMPANY_INFO = {
@@ -399,53 +400,111 @@ function VenueTimesheet() {
     pdf.save(filename);
   };
 
-  return (
-    <>
-      <div className="d-flex justify-content-between gap-3 align-items-center mb-3 flex-wrap">
-        <h3 className="text-4a">Venue Timesheet</h3>
 
-        <div className="d-flex gap-3 align-items-center flex-wrap">
-          <select className="form-select" style={{ minWidth: "220px" }} value={selectedSite} onChange={(e) => setSelectedSite(e.target.value)}>
-            <option value="">Select venue</option>
-            {siteOptions.map((s) => (
-              <option key={s.name} value={s.name}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+return (
+  <>
+    {/* Page heading and controls */}
+    <div className={`${styles.timesheetHeader} mb-3`}>
+      <h3 className="text-4a mb-0">Venue Timesheet</h3>
 
-          <CalendarSlider onChange={setDateRange} alignToMonday />
+      <div className={styles.timesheetControls}>
+        <select
+          className={`form-select ${styles.venueSelect}`}
+          value={selectedSite}
+          onChange={(e) => setSelectedSite(e.target.value)}
+        >
+          <option value="">Select venue</option>
+          {siteOptions.map((s) => (
+            <option key={s.name} value={s.name}>
+              {s.name}
+            </option>
+          ))}
+        </select>
 
-          <button className="btn custom-red-bg text-white fw-medium" disabled={!selectedSite || guardRows.length === 0} onClick={handleDownloadPdf}>
-            Download PDF
-          </button>
+        <div className={styles.calendarControl}>
+          <CalendarSlider
+            onChange={setDateRange}
+            alignToMonday
+          />
         </div>
-      </div>
 
-      <div className="border p-3 rounded">
-        {!selectedSite ? (
-          <div className="text-center">Select a venue to view its timesheet</div>
-        ) : loading ? (
-          <Spinner />
-        ) : guardRows.length === 0 ? (
-          <div className="text-center">No shifts found for this venue and week</div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className="table table-sm text-center align-middle">
+        <button
+          className={`btn custom-red-bg text-white fw-medium ${styles.downloadButton}`}
+          disabled={!selectedSite || guardRows.length === 0}
+          onClick={handleDownloadPdf}
+        >
+          Download PDF
+        </button>
+      </div>
+    </div>
+
+    {/* Timesheet content */}
+    <div className={`border p-3 rounded ${styles.timesheetContainer}`}>
+      {!selectedSite ? (
+        <div className="text-center">
+          Select a venue to view its timesheet
+        </div>
+      ) : loading ? (
+        <Spinner />
+      ) : guardRows.length === 0 ? (
+        <div className="text-center">
+          No shifts found for this venue and week
+        </div>
+      ) : (
+        <>
+          {/* ================= Mobile: one card per guard ================= */}
+          <div className={`${styles.mobileOnly} ${styles.cardList}`}>
+            {guardRows.map((row) => {
+              const workedDays = row.days.map((d, i) => ({ ...d, date: dayDates[i] })).filter((d) => d.start !== "-" || d.finish !== "-" || d.hours !== "-");
+
+              return (
+                <div className={styles.card} key={row.userId || row.staffname}>
+                  {/* Top row: guard name on the left, weekly total on the right */}
+                  <div className={styles.cardTop}>
+                    <h6 className={styles.name}>{row.staffname}</h6>
+                    <span className={styles.totalBadge}>{row.weeklyTotal}</span>
+                  </div>
+
+                  {workedDays.length === 0 ? (
+                    <div className={styles.noHours}>No recorded hours</div>
+                  ) : (
+                    <ul className={styles.dayList}>
+                      {workedDays.map((d) => (
+                        <li key={isoDateKey(d.date)} className={styles.dayRow}>
+                          <span className={styles.dayLabel}>{formatDayShort(d.date)}</span>
+                          <span className={styles.dayTimes}>
+                            {d.start} – {d.finish}
+                          </span>
+                          <span className={styles.dayHours}>{d.hours}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ================= Desktop / tablet: Table ================= */}
+          <div className={`${styles.desktopOnly} ${styles.timesheetTableWrapper}`}>
+            <table className={`table table-sm text-center align-middle ${styles.timesheetTable}`}>
               <thead>
                 <tr>
                   <th rowSpan={2} className="text-start align-middle">
                     Staff
                   </th>
+
                   {dayDates.map((d, i) => (
                     <th key={isoDateKey(d)} colSpan={3}>
                       {formatDayShort(d)}, Guards: {dayGuardCounts[i]}
                     </th>
                   ))}
+
                   <th rowSpan={2} className="align-middle">
                     Weekly Total
                   </th>
                 </tr>
+
                 <tr>
                   {dayDates.map((d) => (
                     <Fragment key={isoDateKey(d)}>
@@ -460,7 +519,10 @@ function VenueTimesheet() {
               <tbody>
                 {guardRows.map((row) => (
                   <tr key={row.userId || row.staffname}>
-                    <td className="text-start fw-bold">{row.staffname}</td>
+                    <td className="text-start fw-bold">
+                      {row.staffname}
+                    </td>
+
                     {row.days.map((d, i) => (
                       <Fragment key={i}>
                         <td>{d.start}</td>
@@ -468,22 +530,26 @@ function VenueTimesheet() {
                         <td>{d.hours}</td>
                       </Fragment>
                     ))}
+
                     <td className="fw-bold">{row.weeklyTotal}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            <div className="d-flex justify-content-end gap-4 mt-3 fw-medium">
-              <span>Guards Supplied: {totals.guardsSupplied}</span>
-              <span>Total Shifts: {totals.totalShifts}</span>
-              <span>Total Hours: {totals.totalHours}</span>
-            </div>
           </div>
-        )}
-      </div>
-    </>
-  );
+
+          {/* Summary statistics */}
+          <div className={styles.timesheetSummary}>
+            <span>Guards Supplied: {totals.guardsSupplied}</span>
+            <span>Total Shifts: {totals.totalShifts}</span>
+            <span>Total Hours: {totals.totalHours}</span>
+          </div>
+        </>
+      )}
+    </div>
+  </>
+);
+
 }
 
 export default VenueTimesheet;
