@@ -10,6 +10,9 @@ import { HiPencilSquare } from "react-icons/hi2";
 import { deleteDoc, doc, writeBatch } from "firebase/firestore";
 import toast from "react-hot-toast";
 import { linkOvernightPairs } from "../utils/linkOvernightPairs";
+
+// one-off backfill button, hidden for now; set to true to show it again
+const SHOW_LINK_OVERNIGHT_PAIRS = false;
 import { HiTrash } from "react-icons/hi2";
 import { formatDate, isDateWithinRange } from "../utils/dateUtils";
 import { calculateWorkedHours, formatMinutes, sumBreakMinutes } from "../utils/hours";
@@ -128,13 +131,15 @@ function Shifts() {
       />
     </div>
 
-    <button
-      className={`btn btn-outline-secondary ${styles.toolbarButton}`}
-      onClick={handleLinkOvernightPairs}
-      disabled={linking || loading}
-    >
-      {linking ? "Linking..." : "Link overnight pairs"}
-    </button>
+    {SHOW_LINK_OVERNIGHT_PAIRS && (
+      <button
+        className={`btn btn-outline-secondary ${styles.toolbarButton}`}
+        onClick={handleLinkOvernightPairs}
+        disabled={linking || loading}
+      >
+        {linking ? "Linking..." : "Link overnight pairs"}
+      </button>
+    )}
 
     <button
       className={`btn btn-danger ${styles.toolbarButton}`}

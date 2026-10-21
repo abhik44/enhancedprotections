@@ -183,3 +183,34 @@ const secondHalf = { date: nextDateStr, startTime: "00:00", endTime: keepCloseSp
 **Test:** create a 22:00 – Close shift. In the app, clock in before midnight and clock out after midnight. In the admin you should see two rows: "10:00 PM – 12:00 AM" on day 1 and "12:00 AM – Close" on day 2. Open either row, change a note, save: both rows must still be there, with clock times unchanged.
 
 **Status:** applied here 2026-10-22, `vite build` passes. Not yet tested end to end.
+
+---
+
+## 3. Hide the "Link overnight pairs" button (2026-10-22)
+
+**Why:** you asked to hide it for now. The backfill code stays in place, so it's a one-line switch to bring it back.
+
+**File:** `src/pages/Shifts.jsx`
+
+1. Under the `linkOvernightPairs` import:
+
+```js
+// one-off backfill button, hidden for now; set to true to show it again
+const SHOW_LINK_OVERNIGHT_PAIRS = false;
+```
+
+2. Wrap the button:
+
+```jsx
+{SHOW_LINK_OVERNIGHT_PAIRS && (
+  <button
+    className={`btn btn-outline-secondary ${styles.toolbarButton}`}
+    onClick={handleLinkOvernightPairs}
+    disabled={linking || loading}
+  >
+    {linking ? "Linking..." : "Link overnight pairs"}
+  </button>
+)}
+```
+
+**Status:** applied here 2026-10-22, `vite build` passes.
