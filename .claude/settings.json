@@ -43,7 +43,13 @@
       "Bash(diff -q src/pages/CreateShiftModal.jsx \"../enhancedprotectionsadmincla 2/src/pages/CreateShiftModal.jsx\" && echo SAME_AS_BEFORE; grep -rn \"send-notification\\\\|sendNotification\" src | grep -v \"^\\\\s*//\" | head)",
       "Read(//Users/abhishek/Documents/projects/enhancedprotectionsadmincla 2/src/pages/**)",
       "Bash(npm ci *)",
-      "Bash(grep -n \"prepareActiveShift\\\\|loadGroup\\\\|_group\\\\b\\\\|_group =\\\\|isEqualTo: \\\\|_todayKey\\\\|yesterday\\\\|DateFormat\\('yyyy-MM-dd'\\)\" flutter-app/lib/screens/home_screen.dart | head -40; echo ---; sed -n '/_load\\(\\) async {/,/^  }/p' flutter-app/lib/screens/home_screen.dart | head -70)"
+      "Bash(grep -n \"prepareActiveShift\\\\|loadGroup\\\\|_group\\\\b\\\\|_group =\\\\|isEqualTo: \\\\|_todayKey\\\\|yesterday\\\\|DateFormat\\('yyyy-MM-dd'\\)\" flutter-app/lib/screens/home_screen.dart | head -40; echo ---; sed -n '/_load\\(\\) async {/,/^  }/p' flutter-app/lib/screens/home_screen.dart | head -70)",
+      "Bash(grep -n \"Text\\(\\\\s*$\" -A1 lib/screens/employment_details.dart lib/screens/time_off_screen.dart lib/screens/shift_detail.dart)",
+      "Bash(cat src/firebase.js; grep -n \"signIn\\\\|auth\" src/pages/login.jsx | head; which firebase gcloud; ls ~/.config/firebase 2>/dev/null)",
+      "Read(//Users/abhishek/.config/firebase/**)",
+      "Bash(firebase projects:list)",
+      "Bash(/Users/abhishek/Downloads/google-cloud-sdk/bin/gcloud auth *)",
+      "Bash(python3 -I -c ' *)"
     ],
     "additionalDirectories": [
       "/Users/abhishek/Documents/projects/enhancedprotectionsadmincla/flutter-app/lib/screens"

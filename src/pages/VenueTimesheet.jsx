@@ -8,6 +8,7 @@ import CalendarSlider from "../ui/CalendarSlider";
 import { formatToAmPm } from "../utils/formatTime";
 import { isDateWithinRange, addDays, isoDateKey, getIsoWeekNumber } from "../utils/dateUtils";
 import { calculateWorkedMinutes, formatMinutes, timeToMinutes } from "../utils/hours";
+import { cleanSiteName, siteNameKey } from "../utils/siteName";
 import styles from "./VenueTimesheet.module.css";
 
 // Static company details for the timesheet PDF footer.
@@ -55,9 +56,10 @@ function VenueTimesheet() {
 
         snap.docs.forEach((d) => {
           const data = d.data();
-          if (!data?.siteName || seen.has(data.siteName)) return;
-          seen.add(data.siteName);
-          options.push({ name: data.siteName, address: data.address || "" });
+          const name = cleanSiteName(data?.siteName);
+          if (!name || seen.has(siteNameKey(name))) return;
+          seen.add(siteNameKey(name));
+          options.push({ name, address: data.address || "" });
         });
 
         if (mounted) setSiteOptions(options);
@@ -92,23 +94,36 @@ function VenueTimesheet() {
     return () => (mounted = false);
   }, []);
 
-  // live shifts for the selected venue
+  // live shifts for the selected venue and week. Fetched by date and matched on the
+  // site name client-side, so stray spaces or capitals in the name can't hide shifts.
+  const weekStartKey = dateRange.start ? isoDateKey(dateRange.start) : null;
+  const weekEndKey = dateRange.end ? isoDateKey(dateRange.end) : null;
+
   useEffect(() => {
-    if (!selectedSite) {
+    if (!selectedSite || !weekStartKey || !weekEndKey) {
       setShifts([]);
       return;
     }
 
     setLoading(true);
-    const q = query(collection(db, "shifts"), where("siteName", "==", selectedSite));
+    const q = query(collection(db, "shifts"), where("date", ">=", weekStartKey), where("date", "<=", weekEndKey));
+    const key = siteNameKey(selectedSite);
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      setShifts(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        setShifts(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })).filter((s) => siteNameKey(s.siteName) === key));
+        setLoading(false);
+      },
+      (e) => {
+        console.error("Shift load error:", e);
+        setShifts([]);
+        setLoading(false);
+      },
+    );
 
     return () => unsub();
-  }, [selectedSite]);
+  }, [selectedSite, weekStartKey, weekEndKey]);
 
   const selectedSiteAddress = useMemo(() => siteOptions.find((s) => s.name === selectedSite)?.address || "", [siteOptions, selectedSite]);
 

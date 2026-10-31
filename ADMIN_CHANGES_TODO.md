@@ -214,3 +214,125 @@ const SHOW_LINK_OVERNIGHT_PAIRS = false;
 ```
 
 **Status:** applied here 2026-10-22, `vite build` passes.
+
+---
+
+## 4. Venue Timesheet missing shifts because of stray spaces in site names (2026-10-31)
+
+**Client report:** "Our location Kmart is showing as having no shifts for last week when there were."
+
+**What was wrong**
+- Shifts store a *copy* of the site name. The Venue Timesheet loaded shifts with `where("siteName", "==", selectedSite)`, so the names had to match exactly.
+- The Kmart site record was `"Kmart Wagga "` (trailing space) but its 20 shifts were `"Kmart Wagga"`, so the timesheet found none. `"Geohex park "` had the same problem.
+- `CreateSiteModal` validated `form.siteName.trim()` but saved `form.siteName` untrimmed, allowed duplicate names (`"Junee Show"` and `"Junee show "`), and a rename never updated existing shifts.
+
+**Live data fixed 2026-10-31** (backups in that session's scratchpad): renamed `sites/OaiNv5bUxcSGk9dKUZYJ` to `"Kmart Wagga"` and `sites/pPda8U2mVJ98nk5B0LbY` to `"Geohex park"`, and deleted the duplicate `sites/yhGVc8EQVe7cbbcaNEsR` (`"Junee show "`, no shifts). No shifts were changed.
+
+> Not fixed: 28 shifts (17 Apr – 4 Jul 2026) are under `"Birdy Bar"`, but no site with that name exists any more, so it isn't in the timesheet dropdown.
+
+### 4a. New file `src/utils/siteName.js`
+
+```js
+// Shifts store a copy of the site name, so compare names loosely: "Kmart Wagga " and "kmart wagga" are the same site.
+export function cleanSiteName(name) {
+  return (name || "").trim().replace(/\s+/g, " ");
+}
+
+export function siteNameKey(name) {
+  return cleanSiteName(name).toLowerCase();
+}
+```
+
+### 4b. `src/pages/VenueTimesheet.jsx`
+
+Import: `import { cleanSiteName, siteNameKey } from "../utils/siteName";`
+
+Site dropdown loader: dedupe by the loose key and show the cleaned name:
+
+```js
+const data = d.data();
+const name = cleanSiteName(data?.siteName);
+if (!name || seen.has(siteNameKey(name))) return;
+seen.add(siteNameKey(name));
+options.push({ name, address: data.address || "" });
+```
+
+Replace the "live shifts for the selected venue" effect. It now queries the week by `date` (all shift dates are `YYYY-MM-DD` strings) and matches the site name client-side. It also stops the spinner on errors:
+
+```js
+// live shifts for the selected venue and week. Fetched by date and matched on the
+// site name client-side, so stray spaces or capitals in the name can't hide shifts.
+const weekStartKey = dateRange.start ? isoDateKey(dateRange.start) : null;
+const weekEndKey = dateRange.end ? isoDateKey(dateRange.end) : null;
+
+useEffect(() => {
+  if (!selectedSite || !weekStartKey || !weekEndKey) {
+    setShifts([]);
+    return;
+  }
+
+  setLoading(true);
+  const q = query(collection(db, "shifts"), where("date", ">=", weekStartKey), where("date", "<=", weekEndKey));
+  const key = siteNameKey(selectedSite);
+
+  const unsub = onSnapshot(
+    q,
+    (snapshot) => {
+      setShifts(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })).filter((s) => siteNameKey(s.siteName) === key));
+      setLoading(false);
+    },
+    (e) => {
+      console.error("Shift load error:", e);
+      setShifts([]);
+      setLoading(false);
+    },
+  );
+
+  return () => unsub();
+}, [selectedSite, weekStartKey, weekEndKey]);
+```
+
+### 4c. `src/pages/CreateSiteModal.jsx`: `handleSave`
+
+Imports: add `getDocs, query, where, writeBatch` to the `firebase/firestore` import, plus `import { cleanSiteName, siteNameKey } from "../utils/siteName";`.
+
+At the top of the `try`, save the cleaned name and block duplicates:
+
+```js
+const siteName = cleanSiteName(form.siteName);
+
+// block a second site with the same name (ignoring spaces/capitals)
+const sitesSnap = await getDocs(collection(db, "sites"));
+const duplicate = sitesSnap.docs.some((d) => d.id !== editingSite?.id && siteNameKey(d.data()?.siteName) === siteNameKey(siteName));
+if (duplicate) {
+  toast.error(`A site called "${siteName}" already exists.`);
+  setSaving(false);
+  return;
+}
+```
+
+In `payload`, use `siteName,` in place of `siteName: form.siteName,`. In the edit branch, after `updateDoc(...)` and before `toast.success`, carry the rename over to the shifts:
+
+```js
+// shifts keep a copy of the site name, so carry a rename over to them
+const oldName = editingSite.siteName;
+if (oldName && oldName !== siteName) {
+  const shiftsSnap = await getDocs(query(collection(db, "shifts"), where("siteName", "==", oldName)));
+  for (let i = 0; i < shiftsSnap.docs.length; i += 500) {
+    const batch = writeBatch(db);
+    shiftsSnap.docs.slice(i, i + 500).forEach((d) => batch.update(d.ref, { siteName }));
+    await batch.commit();
+  }
+}
+```
+
+### 4d. `src/pages/CreateShiftModal.jsx`
+
+Import `cleanSiteName` from `../utils/siteName`, then:
+- Site options: `.map((d) => cleanSiteName(d.data()?.siteName))`, so new shifts are saved with the clean name.
+- When filling the form from `editingShift`: `siteName: cleanSiteName(editingShift.siteName),`
+- In the `scheduleChanged` check: `form.siteName !== cleanSiteName(editingShift.siteName) ||`
+
+**Test:** open Venue Timesheet, choose Kmart Wagga, and go to 19–25 Oct; there should be 6 shifts. Edit a site and add a trailing space: it saves without the space. Create a site named like an existing one in different capitals: you get a red toast. Rename a site: its shifts still show under the new name in Shifts and Venue Timesheet.
+
+**Status:** applied here 2026-10-31, `vite build` passes. Not yet tested in the browser.

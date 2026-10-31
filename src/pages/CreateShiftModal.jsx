@@ -4,6 +4,7 @@ import { db } from "../firebase";
 import { collection, addDoc, getDocs, serverTimestamp, doc, updateDoc, getDoc, query, where, writeBatch, deleteField } from "firebase/firestore";
 import toast from "react-hot-toast";
 import { spanMinutes, sumBreakMinutes, timeToMinutes } from "../utils/hours";
+import { cleanSiteName } from "../utils/siteName";
 
 export default function CreateShiftModal({ editingShift, onClose }) {
   const modalId = "createShift";
@@ -106,7 +107,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
       try {
         const snap = await getDocs(collection(db, "sites"));
         const names = snap.docs
-          .map((d) => d.data()?.siteName)
+          .map((d) => cleanSiteName(d.data()?.siteName))
           .filter(Boolean)
           .filter((v, i, arr) => arr.indexOf(v) === i);
 
@@ -253,7 +254,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
       endTime: last.endTime && last.endTime !== "close" ? last.endTime : defaultEnd,
       // an auto-split "Close" shift (staff app, clocked out after midnight) has half 2 = 00:00 - 00:00
       endTimeType: last.endTime === (splitHalves ? last.startTime : first.startTime) ? "close" : "time",
-      siteName: editingShift.siteName || "",
+      siteName: cleanSiteName(editingShift.siteName),
       staffname: staffMatch ? staffMatch.id : "", // ✅ IMPORTANT
       notes: editingShift.notes || "",
       clockin: editingShift.clockin || "0",
@@ -296,7 +297,7 @@ export default function CreateShiftModal({ editingShift, onClose }) {
         (form.date !== origFirst.date ||
           form.startTime !== origFirst.startTime ||
           (keepCloseSplit ? "00:00" : endTimeToSave) !== origLast.endTime ||
-          form.siteName !== editingShift.siteName ||
+          form.siteName !== cleanSiteName(editingShift.siteName) ||
           form.staffname !== editingShift.userId);
       const notifyUpdate = async () => {
         if (scheduleChanged) await sendNotification(form.staffname, form.siteName, form.date, "Shift Updated");

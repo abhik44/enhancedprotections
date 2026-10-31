@@ -2,8 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CreateSiteModal.module.css";
 import { db } from "../firebase";
-import { collection, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, serverTimestamp, getDocs, query, where, writeBatch } from "firebase/firestore";
 import toast from "react-hot-toast";
+import { cleanSiteName, siteNameKey } from "../utils/siteName";
 import {
   MapContainer,
   TileLayer,
@@ -467,8 +468,19 @@ export default function CreateSiteModal({ editingSite, onClose }) {
     setSaving(true);
 
     try {
+      const siteName = cleanSiteName(form.siteName);
+
+      // block a second site with the same name (ignoring spaces/capitals)
+      const sitesSnap = await getDocs(collection(db, "sites"));
+      const duplicate = sitesSnap.docs.some((d) => d.id !== editingSite?.id && siteNameKey(d.data()?.siteName) === siteNameKey(siteName));
+      if (duplicate) {
+        toast.error(`A site called "${siteName}" already exists.`);
+        setSaving(false);
+        return;
+      }
+
       const payload = {
-        siteName: form.siteName,
+        siteName,
         address: form.address,
         latitude: Number(form.latitude),
         longitude: Number(form.longitude),
@@ -477,6 +489,18 @@ export default function CreateSiteModal({ editingSite, onClose }) {
       if (isEdit && editingSite?.id) {
         const ref = doc(db, "sites", editingSite.id);
         await updateDoc(ref, { ...payload, updatedAt: serverTimestamp() });
+
+        // shifts keep a copy of the site name, so carry a rename over to them
+        const oldName = editingSite.siteName;
+        if (oldName && oldName !== siteName) {
+          const shiftsSnap = await getDocs(query(collection(db, "shifts"), where("siteName", "==", oldName)));
+          for (let i = 0; i < shiftsSnap.docs.length; i += 500) {
+            const batch = writeBatch(db);
+            shiftsSnap.docs.slice(i, i + 500).forEach((d) => batch.update(d.ref, { siteName }));
+            await batch.commit();
+          }
+        }
+
         toast.success("Site updated successfully");
       } else {
         await addDoc(collection(db, "sites"), {
